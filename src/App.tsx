@@ -37,6 +37,7 @@ const App: Component = () => {
           >
             Fill year pattern
           </button>
+        <div class="mx-auto flex max-w-[1800px] items-center justify-end px-4 lg:px-8">
           <button
             class="btn btn-ghost text-rose-300 hover:bg-rose-500/10"
             onClick={handleClearAll}
