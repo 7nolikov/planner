@@ -4,6 +4,7 @@ import { yearStore } from '../stores/yearStore';
 import { sprintStore } from '../stores/sprintStore';
 import { SprintCard } from './SprintCard';
 import { WeekCell } from './WeekCell';
+import { MAX_VACATION_WEEKS } from '../types';
 import type { Sprint, Week } from '../types';
 
 type Section = 
@@ -95,7 +96,7 @@ export const YearView: Component = () => {
         </div>
         <div class="flex items-center gap-2">
           <Palmtree size={16} class="text-vacation" />
-          <span>{yearStore.vacationCount()}/4 vacation weeks</span>
+          <span>{yearStore.vacationCount()}/{MAX_VACATION_WEEKS} vacation weeks</span>
         </div>
         <div class="flex items-center gap-2">
           <span class="h-1.5 w-1.5 rounded-full bg-surface-500" />
