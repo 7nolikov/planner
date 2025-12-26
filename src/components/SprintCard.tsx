@@ -1,0 +1,105 @@
+import { Component, For, Show, createMemo } from 'solid-js';
+import { Edit3, Target, Trash2 } from 'lucide-solid';
+import type { Sprint } from '../types';
+import { SPRINT_COLOR_MAP } from '../types';
+import { yearStore } from '../stores/yearStore';
+import { sprintStore } from '../stores/sprintStore';
+import { uiStore } from '../stores/uiStore';
+import { WeekCell } from './WeekCell';
+
+interface SprintCardProps {
+  sprint: Sprint;
+}
+
+export const SprintCard: Component<SprintCardProps> = (props) => {
+  const weeks = createMemo(() => {
+    return props.sprint.weekIds
+      .map((id) => yearStore.getWeek(id))
+      .filter((w): w is NonNullable<typeof w> => w !== undefined);
+  });
+
+  const colorClasses = () => SPRINT_COLOR_MAP[props.sprint.colorTheme];
+
+  const handleEdit = () => {
+    uiStore.openEditModal('sprint', props.sprint.id);
+  };
+
+  const handleDelete = () => {
+    if (confirm(`Delete sprint "${props.sprint.title}"? Weeks will remain but won't be grouped.`)) {
+      sprintStore.deleteSprint(props.sprint.id);
+    }
+  };
+
+  const formatDateRange = () => {
+    const firstWeek = weeks()[0];
+    const lastWeek = weeks()[weeks().length - 1];
+    if (!firstWeek || !lastWeek) return '';
+    
+    const start = new Date(firstWeek.startDate);
+    const end = new Date(lastWeek.endDate);
+    
+    return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+  };
+
+  return (
+    <div class={`sprint-card overflow-hidden ${colorClasses().border} border-l-4`}>
+      {/* Header */}
+      <div class={`${colorClasses().bg} px-4 py-3 border-b border-surface-800`}>
+        <div class="flex items-start justify-between gap-4">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2">
+              <Target size={16} class={colorClasses().text} />
+              <h3 class="font-semibold text-white truncate">
+                {props.sprint.title}
+              </h3>
+            </div>
+            <p class="mt-1 text-xs text-surface-400">
+              {formatDateRange()} · 6 weeks
+            </p>
+          </div>
+          
+          <div class="flex items-center gap-1 flex-shrink-0">
+            <button
+              onClick={handleEdit}
+              class="p-1.5 text-surface-400 hover:text-white hover:bg-surface-700 rounded transition-colors"
+              title="Edit sprint"
+            >
+              <Edit3 size={14} />
+            </button>
+            <button
+              onClick={handleDelete}
+              class="p-1.5 text-surface-400 hover:text-red-400 hover:bg-surface-700 rounded transition-colors"
+              title="Delete sprint"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        </div>
+
+        {/* Goal pitch preview */}
+        <Show when={props.sprint.goalPitch}>
+          <p class="mt-2 text-sm text-surface-300 line-clamp-2">
+            {props.sprint.goalPitch}
+          </p>
+        </Show>
+      </div>
+
+      {/* Weeks grid */}
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-px bg-surface-800">
+        <For each={weeks()}>
+          {(week, index) => (
+            <div class="bg-surface-900">
+              <WeekCell
+                week={week}
+                sprintColor={props.sprint.colorTheme}
+                isFirst={index() === 0}
+                isLast={index() === weeks().length - 1}
+              />
+            </div>
+          )}
+        </For>
+      </div>
+    </div>
+  );
+};
+
