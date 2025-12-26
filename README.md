@@ -60,7 +60,7 @@ The built files will be in the `dist/` directory.
 ### Managing Vacations
 
 - Click the palm tree icon on any unassigned week to mark it as vacation
-- You can have up to 4 vacation weeks per year
+- You can have up to 5 vacation weeks per year
 - Vacations must be placed between sprints, not within them
 
 ### Task Management
