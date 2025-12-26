@@ -96,6 +96,7 @@ export const uiStore = createRoot(() => {
     setQuickAddWeekId(null);
   }
 
+
   return {
     // State (reactive)
     get editModal() { return editModal; },

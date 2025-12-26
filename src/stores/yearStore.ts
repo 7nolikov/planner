@@ -8,7 +8,9 @@ import { YearGenerator } from '../services/YearGenerator';
 // Wrap all reactive computations in createRoot
 export const yearStore = createRoot(() => {
   // Current year signal
-  const [currentYear, setCurrentYear] = createSignal(new Date().getFullYear());
+  const storedYear = StorageService.loadCurrentYear();
+  const initialYear = storedYear ?? new Date().getFullYear();
+  const [currentYear, setCurrentYear] = createSignal(initialYear);
 
   // Year data store
   const [yearData, setYearData] = createStore<YearData>({
@@ -35,6 +37,7 @@ export const yearStore = createRoot(() => {
 
   // Initialize on first load
   initializeYear(currentYear());
+  StorageService.saveCurrentYear(currentYear());
 
   /**
    * Get weeks that are not part of any sprint and not vacation
@@ -300,6 +303,7 @@ export const yearStore = createRoot(() => {
     if (year !== currentYear()) {
       setCurrentYear(year);
       initializeYear(year);
+      StorageService.saveCurrentYear(year);
     }
   }
 

@@ -1,34 +1,34 @@
 import type { Week, YearData } from '../types';
 
 /**
- * Calculate the ISO week number for a given date.
- * ISO weeks start on Monday and the first week contains January 4th.
+ * Get the Monday for the week containing the given date.
  */
-function getISOWeekNumber(date: Date): number {
-  const target = new Date(date.valueOf());
-  // Set to nearest Thursday: current date + 4 - current day number
-  const dayNum = (date.getDay() + 6) % 7;
-  target.setDate(target.getDate() - dayNum + 3);
-  // Compare with first Thursday of the year
-  const firstThursday = new Date(target.getFullYear(), 0, 4);
-  const dayOfYear = (target.getTime() - firstThursday.getTime()) / 86400000;
-  return 1 + Math.ceil(dayOfYear / 7);
+function getWeekStartForDate(date: Date): Date {
+  const result = new Date(date.valueOf());
+  const dayOfWeek = (result.getDay() + 6) % 7; // 0 = Monday
+  result.setDate(result.getDate() - dayOfWeek);
+  result.setHours(0, 0, 0, 0);
+  return result;
 }
 
 /**
- * Get the Monday of a given ISO week.
+ * Get the first week start for a year (first Monday on or after Jan 1).
  */
-function getWeekStart(year: number, weekNumber: number): Date {
-  // Find January 4th (always in week 1)
-  const jan4 = new Date(year, 0, 4);
-  // Find the Monday of week 1
-  const dayOfWeek = (jan4.getDay() + 6) % 7; // 0 = Monday
-  const week1Monday = new Date(jan4);
-  week1Monday.setDate(jan4.getDate() - dayOfWeek);
-  // Add weeks
-  const result = new Date(week1Monday);
-  result.setDate(week1Monday.getDate() + (weekNumber - 1) * 7);
+function getFirstWeekStart(year: number): Date {
+  const jan1 = new Date(year, 0, 1);
+  const dayOfWeek = (jan1.getDay() + 6) % 7; // 0 = Monday
+  if (dayOfWeek === 0) return jan1;
+  const result = new Date(jan1);
+  result.setDate(jan1.getDate() + (7 - dayOfWeek));
   return result;
+}
+
+/**
+ * Get the last week start for a year (Monday on or before Dec 31).
+ */
+function getLastWeekStart(year: number): Date {
+  const dec31 = new Date(year, 11, 31);
+  return getWeekStartForDate(dec31);
 }
 
 /**
@@ -44,8 +44,7 @@ function formatDate(date: Date): string {
 /**
  * Generate a single week object
  */
-function generateWeek(year: number, weekNumber: number): Week {
-  const startDate = getWeekStart(year, weekNumber);
+function generateWeek(year: number, weekNumber: number, startDate: Date): Week {
   const endDate = new Date(startDate);
   endDate.setDate(startDate.getDate() + 6);
 
@@ -63,30 +62,13 @@ function generateWeek(year: number, weekNumber: number): Week {
 }
 
 /**
- * Calculate the number of ISO weeks in a year.
- * Most years have 52 weeks, but some have 53.
+ * Calculate the number of weeks in a year based on Monday-week starts.
  */
 function getWeeksInYear(year: number): number {
-  // A year has 53 weeks if Jan 1 is Thursday or if it's a leap year and Jan 1 is Wednesday
-  const jan1 = new Date(year, 0, 1);
-  const jan1Day = jan1.getDay();
-  
-  // Check if leap year
-  const isLeap = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
-  
-  if (jan1Day === 4 || (isLeap && jan1Day === 3)) {
-    return 53;
-  }
-  
-  // Also check Dec 31
-  const dec31 = new Date(year, 11, 31);
-  const dec31Day = dec31.getDay();
-  
-  if (dec31Day === 4 || (isLeap && dec31Day === 5)) {
-    return 53;
-  }
-  
-  return 52;
+  const firstStart = getFirstWeekStart(year);
+  const lastStart = getLastWeekStart(year);
+  const diffDays = (lastStart.getTime() - firstStart.getTime()) / 86400000;
+  return Math.floor(diffDays / 7) + 1;
 }
 
 /**
@@ -97,11 +79,16 @@ export const YearGenerator = {
    * Generate all weeks for a year
    */
   generateYear(year: number): YearData {
-    const weekCount = getWeeksInYear(year);
     const weeks: Week[] = [];
+    const firstStart = getFirstWeekStart(year);
+    const lastStart = getLastWeekStart(year);
 
-    for (let weekNum = 1; weekNum <= weekCount; weekNum++) {
-      weeks.push(generateWeek(year, weekNum));
+    let weekNum = 1;
+    for (let start = new Date(firstStart); start <= lastStart; ) {
+      weeks.push(generateWeek(year, weekNum, start));
+      weekNum += 1;
+      start = new Date(start);
+      start.setDate(start.getDate() + 7);
     }
 
     return {
@@ -120,18 +107,23 @@ export const YearGenerator = {
   },
 
   /**
-   * Get the ISO week number for a date
+   * Get the week number for a date
    */
   getWeekNumber(date: Date): number {
-    return getISOWeekNumber(date);
+    const weekStart = getWeekStartForDate(date);
+    const weekYear = weekStart.getFullYear();
+    const firstStart = getFirstWeekStart(weekYear);
+    const diffDays = (weekStart.getTime() - firstStart.getTime()) / 86400000;
+    return Math.floor(diffDays / 7) + 1;
   },
 
   /**
    * Get the week ID for a date
    */
   getWeekId(date: Date): string {
-    const year = date.getFullYear();
-    const weekNum = getISOWeekNumber(date);
+    const weekStart = getWeekStartForDate(date);
+    const year = weekStart.getFullYear();
+    const weekNum = this.getWeekNumber(date);
     return `${year}-W${String(weekNum).padStart(2, '0')}`;
   },
 
@@ -149,4 +141,3 @@ export const YearGenerator = {
     return new Date().getFullYear();
   },
 };
-

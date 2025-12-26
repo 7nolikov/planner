@@ -1,7 +1,7 @@
 import { Component, createSignal, For, Show } from 'solid-js';
 import { Plus, Palmtree, Calendar } from 'lucide-solid';
 import type { Week } from '../types';
-import { SPRINT_COLOR_MAP, type SprintColor } from '../types';
+import { MAX_VACATION_WEEKS, SPRINT_COLOR_MAP, type SprintColor } from '../types';
 import { yearStore } from '../stores/yearStore';
 import { sprintStore } from '../stores/sprintStore';
 import { uiStore } from '../stores/uiStore';
@@ -153,7 +153,7 @@ export const WeekCell: Component<WeekCellProps> = (props) => {
           <button
             onClick={handleVacationToggle}
             class="flex items-center gap-1 rounded px-2 py-1 text-xs text-surface-500 hover:bg-vacation/20 hover:text-vacation transition-colors"
-            title={`Set as vacation (${yearStore.vacationCount()}/4 used)`}
+            title={`Set as vacation (${yearStore.vacationCount()}/${MAX_VACATION_WEEKS} used)`}
           >
             <Palmtree size={12} />
           </button>
@@ -185,4 +185,3 @@ export const WeekCell: Component<WeekCellProps> = (props) => {
     </div>
   );
 };
-
