@@ -3,6 +3,7 @@ import { YearView } from './components/YearView';
 import { YearSelector } from './components/YearSelector';
 import { EditModal } from './components/EditModal';
 import { uiStore } from './stores/uiStore';
+import { yearStore } from './stores/yearStore';
 import { StorageService } from './services/StorageService';
 
 const App: Component = () => {
@@ -29,6 +30,13 @@ const App: Component = () => {
       </main>
 
       <footer class="border-t border-surface-800 bg-surface-950/80 py-4">
+        <div class="mx-auto flex max-w-[1800px] items-center justify-between px-4 lg:px-8">
+          <button
+            class="btn btn-ghost"
+            onClick={() => yearStore.seedYearPattern()}
+          >
+            Fill year pattern
+          </button>
         <div class="mx-auto flex max-w-[1800px] items-center justify-end px-4 lg:px-8">
           <button
             class="btn btn-ghost text-rose-300 hover:bg-rose-500/10"
