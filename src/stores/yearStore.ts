@@ -1,14 +1,16 @@
 import { createSignal, createRoot, createMemo } from 'solid-js';
 import { createStore, produce } from 'solid-js/store';
 import type { Week, YearData, Task, Sprint } from '../types';
-import { generateId, MAX_VACATION_WEEKS } from '../types';
+import { generateId, MAX_VACATION_WEEKS, SPRINT_COLORS } from '../types';
 import { StorageService } from '../services/StorageService';
 import { YearGenerator } from '../services/YearGenerator';
 
 // Wrap all reactive computations in createRoot
 export const yearStore = createRoot(() => {
   // Current year signal
-  const [currentYear, setCurrentYear] = createSignal(new Date().getFullYear());
+  const storedYear = StorageService.loadCurrentYear();
+  const initialYear = storedYear ?? new Date().getFullYear();
+  const [currentYear, setCurrentYear] = createSignal(initialYear);
 
   // Year data store
   const [yearData, setYearData] = createStore<YearData>({
@@ -35,6 +37,7 @@ export const yearStore = createRoot(() => {
 
   // Initialize on first load
   initializeYear(currentYear());
+  StorageService.saveCurrentYear(currentYear());
 
   /**
    * Get weeks that are not part of any sprint and not vacation
@@ -286,6 +289,81 @@ export const yearStore = createRoot(() => {
   }
 
   /**
+   * Seed year with 8 sprints and vacation weeks pattern
+   */
+  function seedYearPattern(): void {
+    const totalWeeks = yearData.weeks.length;
+    const totalSprintWeeks = 8 * 6;
+    const remainingVacationWeeks = Math.max(0, totalWeeks - totalSprintWeeks);
+
+    setYearData(
+      produce((state) => {
+        state.sprints = [];
+        state.vacationWeekIds = [];
+
+        state.weeks.forEach((week) => {
+          week.isVacation = false;
+          week.sprintId = null;
+          week.tasks = [];
+        });
+
+        let weekIndex = 0;
+        let sprintOrder = 0;
+
+        while (sprintOrder < 8 && weekIndex < state.weeks.length) {
+          for (let sprintOffset = 0; sprintOffset < 2 && sprintOrder < 8; sprintOffset++) {
+            const weekIds: string[] = [];
+            for (let i = 0; i < 6 && weekIndex < state.weeks.length; i++) {
+              const week = state.weeks[weekIndex];
+              weekIds.push(week.id);
+              weekIndex += 1;
+            }
+
+            if (weekIds.length < 6) {
+              break;
+            }
+
+            const sprintId = generateId();
+            state.sprints.push({
+              id: sprintId,
+              title: `Sprint ${sprintOrder + 1}`,
+              goalPitch: '',
+              colorTheme: SPRINT_COLORS[sprintOrder % SPRINT_COLORS.length],
+              weekIds,
+              year: state.year,
+              order: sprintOrder,
+            });
+
+            weekIds.forEach((weekId) => {
+              const week = state.weeks.find((w) => w.id === weekId);
+              if (week) {
+                week.sprintId = sprintId;
+              }
+            });
+
+            sprintOrder += 1;
+          }
+
+          if (weekIndex < state.weeks.length) {
+            const week = state.weeks[weekIndex];
+            week.isVacation = true;
+            state.vacationWeekIds.push(week.id);
+            weekIndex += 1;
+          }
+        }
+
+        while (state.vacationWeekIds.length < remainingVacationWeeks && weekIndex < state.weeks.length) {
+          const week = state.weeks[weekIndex];
+          week.isVacation = true;
+          state.vacationWeekIds.push(week.id);
+          weekIndex += 1;
+        }
+      })
+    );
+    saveCurrentYear();
+  }
+
+  /**
    * Save current year data to storage
    */
   function saveCurrentYear(): void {
@@ -300,6 +378,7 @@ export const yearStore = createRoot(() => {
     if (year !== currentYear()) {
       setCurrentYear(year);
       initializeYear(year);
+      StorageService.saveCurrentYear(year);
     }
   }
 
@@ -327,5 +406,6 @@ export const yearStore = createRoot(() => {
     addSprint,
     updateSprintData,
     removeSprint,
+    seedYearPattern,
   };
 });

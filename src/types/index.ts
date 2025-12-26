@@ -9,7 +9,7 @@ export interface Task {
 
 export interface Week {
   id: string;           // Format: "2026-W01"
-  weekNumber: number;   // 1-52
+  weekNumber: number;   // 1-53
   year: number;
   startDate: string;    // ISO date string
   endDate: string;      // ISO date string
@@ -33,7 +33,7 @@ export interface YearData {
   year: number;
   weeks: Week[];
   sprints: Sprint[];
-  vacationWeekIds: string[];  // Max 4 vacation weeks
+  vacationWeekIds: string[];  // Max 5 vacation weeks
 }
 
 export type SprintColor = 
@@ -68,7 +68,7 @@ export const SPRINT_COLOR_MAP: Record<SprintColor, { bg: string; border: string;
   cyan: { bg: 'bg-sprint-cyan/10', border: 'border-sprint-cyan/30', text: 'text-sprint-cyan' },
 };
 
-export const MAX_VACATION_WEEKS = 4;
+export const MAX_VACATION_WEEKS = 5;
 export const WEEKS_PER_SPRINT = 6;
 export const WEEKS_PER_YEAR = 52;
 
@@ -90,4 +90,3 @@ export interface DragState {
 export function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
-

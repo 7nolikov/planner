@@ -1,6 +1,7 @@
 import type { YearData } from '../types';
 
 const STORAGE_KEY_PREFIX = 'shapeup-planner';
+const CURRENT_YEAR_KEY = `${STORAGE_KEY_PREFIX}-current-year`;
 
 /**
  * StorageService provides a clean abstraction over localStorage.
@@ -26,6 +27,34 @@ export const StorageService = {
     } catch (error) {
       console.error('Failed to save year data:', error);
       return false;
+    }
+  },
+
+  /**
+   * Save the last opened year
+   */
+  saveCurrentYear(year: number): boolean {
+    try {
+      localStorage.setItem(CURRENT_YEAR_KEY, String(year));
+      return true;
+    } catch (error) {
+      console.error('Failed to save current year:', error);
+      return false;
+    }
+  },
+
+  /**
+   * Load the last opened year
+   */
+  loadCurrentYear(): number | null {
+    try {
+      const stored = localStorage.getItem(CURRENT_YEAR_KEY);
+      if (!stored) return null;
+      const year = parseInt(stored, 10);
+      return Number.isNaN(year) ? null : year;
+    } catch (error) {
+      console.error('Failed to load current year:', error);
+      return null;
     }
   },
 
@@ -135,4 +164,3 @@ export const StorageService = {
     }
   },
 };
-
