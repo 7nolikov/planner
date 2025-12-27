@@ -27,7 +27,7 @@ export const YearView: Component = () => {
     const groups: Week[][] = [];
     let currentGroup: Week[] = [];
 
-    unassignedWeeks().forEach((week, index, arr) => {
+    availableWeeks().forEach((week, index, arr) => {
       if (currentGroup.length === 0) {
         currentGroup.push(week);
       } else {
