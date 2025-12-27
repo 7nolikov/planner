@@ -42,6 +42,19 @@
     @apply border-surface-700 shadow-lg shadow-black/20;
   }
 
+  .vacation-card {
+    @apply rounded-xl border border-vacation/30 bg-surface-900/50 backdrop-blur-sm;
+    @apply transition-all duration-200 ease-out;
+  }
+
+  .vacation-card:hover {
+    @apply border-vacation/60 shadow-lg shadow-black/20;
+  }
+
+  .vacation-card__header {
+    @apply bg-vacation/10;
+  }
+
   .week-cell {
     @apply rounded-lg border border-surface-800 bg-surface-900;
     @apply p-3 min-h-[100px] transition-all duration-150;
@@ -117,7 +130,8 @@
   }
 
   /* Full-width sprint cards on mobile */
-  .sprint-card {
+  .sprint-card,
+  .vacation-card {
     min-width: calc(100vw - 2rem);
     flex-shrink: 0;
   }
@@ -171,4 +185,3 @@
   transform: rotate(2deg);
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
 }
-
