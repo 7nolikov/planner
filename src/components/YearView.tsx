@@ -127,7 +127,12 @@ export const YearView: Component = () => {
               {section.type === 'sprint' ? (
                 <SprintCard sprint={section.sprint} />
               ) : section.type === 'vacation' ? (
-                <WeekGroupSection weeks={section.weeks} />
+                <WeekGroupSection
+                  weeks={section.weeks}
+                  label="Vacation"
+                  labelClasses="text-vacation"
+                  markerClasses="bg-vacation/40"
+                />
               ) : (
                 <WeekGroupSection
                   weeks={section.weeks}
@@ -161,9 +166,9 @@ export const YearView: Component = () => {
 // Unassigned weeks section component
 interface UnassignedWeeksSectionProps {
   weeks: Week[];
-  label?: string;
-  labelClasses?: string;
-  markerClasses?: string;
+  label: string;
+  labelClasses: string;
+  markerClasses: string;
 }
 
 const WeekGroupSection: Component<UnassignedWeeksSectionProps> = (props) => {
@@ -179,13 +184,11 @@ const WeekGroupSection: Component<UnassignedWeeksSectionProps> = (props) => {
 
   return (
     <div class="space-y-3">
-      <Show when={props.label}>
-        <div class={`flex items-center gap-2 text-sm ${props.labelClasses}`}>
-          <span class={`h-px flex-1 ${props.markerClasses}`} />
-          <span>{formatRange()} · {props.label}</span>
-          <span class={`h-px flex-1 ${props.markerClasses}`} />
-        </div>
-      </Show>
+      <div class={`flex items-center gap-2 text-sm ${props.labelClasses}`}>
+        <span class={`h-px flex-1 ${props.markerClasses}`} />
+        <span>{formatRange()} · {props.label}</span>
+        <span class={`h-px flex-1 ${props.markerClasses}`} />
+      </div>
       
       <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
         <For each={props.weeks}>
