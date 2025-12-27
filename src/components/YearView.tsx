@@ -9,25 +9,15 @@ import type { Sprint, Week } from '../types';
 
 type Section = 
   | { type: 'sprint'; sprint: Sprint }
-  | { type: 'unassigned'; weeks: Week[] };
+  | { type: 'unassigned'; weeks: Week[] }
+  | { type: 'vacation'; weeks: Week[] };
 
 export const YearView: Component = () => {
-  // Get unassigned weeks (not in any sprint)
-  const unassignedWeeks = createMemo(() => {
-    return yearStore.weeks.filter((week) => !week.sprintId);
-  });
-
-  // Get unassigned non-vacation weeks
-  const availableWeeks = createMemo(() => {
-    return unassignedWeeks().filter((week) => !week.isVacation);
-  });
-
-  // Group consecutive unassigned weeks (including vacation weeks)
-  const unassignedGroups = createMemo((): Week[][] => {
+  const groupConsecutiveWeeks = (weeks: Week[]) => {
     const groups: Week[][] = [];
     let currentGroup: Week[] = [];
 
-    unassignedWeeks().forEach((week, index, arr) => {
+    weeks.forEach((week, index, arr) => {
       if (currentGroup.length === 0) {
         currentGroup.push(week);
       } else {
@@ -47,7 +37,25 @@ export const YearView: Component = () => {
     }
 
     return groups;
+  };
+
+  // Get unassigned weeks (not in any sprint or vacation)
+  const unassignedWeeks = createMemo(() => {
+    return yearStore.weeks.filter((week) => !week.sprintId && !week.isVacation);
   });
+
+  const vacationWeeks = createMemo(() => {
+    return yearStore.weeks.filter((week) => week.isVacation);
+  });
+
+  // Get unassigned non-vacation weeks
+  const availableWeeks = createMemo(() => {
+    return unassignedWeeks();
+  });
+
+  // Group consecutive unassigned weeks
+  const unassignedGroups = createMemo((): Week[][] => groupConsecutiveWeeks(unassignedWeeks()));
+  const vacationGroups = createMemo((): Week[][] => groupConsecutiveWeeks(vacationWeeks()));
 
   // Interleave sprints and unassigned groups by week number
   const orderedSections = createMemo((): Section[] => {
@@ -63,6 +71,13 @@ export const YearView: Component = () => {
     unassignedGroups().forEach((weeks) => {
       if (weeks.length > 0) {
         sections.push({ type: 'unassigned', weeks });
+      }
+    });
+
+    // Add vacation groups
+    vacationGroups().forEach((weeks) => {
+      if (weeks.length > 0) {
+        sections.push({ type: 'vacation', weeks });
       }
     });
 
@@ -111,8 +126,15 @@ export const YearView: Component = () => {
             <>
               {section.type === 'sprint' ? (
                 <SprintCard sprint={section.sprint} />
+              ) : section.type === 'vacation' ? (
+                <WeekGroupSection weeks={section.weeks} />
               ) : (
-                <UnassignedWeeksSection weeks={section.weeks} />
+                <WeekGroupSection
+                  weeks={section.weeks}
+                  label="Unassigned"
+                  labelClasses="text-surface-500"
+                  markerClasses="bg-surface-800"
+                />
               )}
             </>
           )}
@@ -139,9 +161,12 @@ export const YearView: Component = () => {
 // Unassigned weeks section component
 interface UnassignedWeeksSectionProps {
   weeks: Week[];
+  label?: string;
+  labelClasses?: string;
+  markerClasses?: string;
 }
 
-const UnassignedWeeksSection: Component<UnassignedWeeksSectionProps> = (props) => {
+const WeekGroupSection: Component<UnassignedWeeksSectionProps> = (props) => {
   const formatRange = () => {
     if (props.weeks.length === 0) return '';
     const first = props.weeks[0];
@@ -154,11 +179,13 @@ const UnassignedWeeksSection: Component<UnassignedWeeksSectionProps> = (props) =
 
   return (
     <div class="space-y-3">
-      <div class="flex items-center gap-2 text-sm text-surface-500">
-        <span class="h-px flex-1 bg-surface-800" />
-        <span>{formatRange()} · Unassigned</span>
-        <span class="h-px flex-1 bg-surface-800" />
-      </div>
+      <Show when={props.label}>
+        <div class={`flex items-center gap-2 text-sm ${props.labelClasses}`}>
+          <span class={`h-px flex-1 ${props.markerClasses}`} />
+          <span>{formatRange()} · {props.label}</span>
+          <span class={`h-px flex-1 ${props.markerClasses}`} />
+        </div>
+      </Show>
       
       <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
         <For each={props.weeks}>
