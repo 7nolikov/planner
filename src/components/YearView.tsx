@@ -3,6 +3,7 @@ import { Calendar, Palmtree } from 'lucide-solid';
 import { yearStore } from '../stores/yearStore';
 import { sprintStore } from '../stores/sprintStore';
 import { SprintCard } from './SprintCard';
+import { VacationCard } from './VacationCard';
 import { WeekCell } from './WeekCell';
 import { MAX_VACATION_WEEKS } from '../types';
 import type { Sprint, Week } from '../types';
@@ -127,7 +128,7 @@ export const YearView: Component = () => {
               {section.type === 'sprint' ? (
                 <SprintCard sprint={section.sprint} />
               ) : section.type === 'vacation' ? (
-                <WeekGroupSection weeks={section.weeks} />
+                <VacationCard weeks={section.weeks} />
               ) : (
                 <WeekGroupSection
                   weeks={section.weeks}
