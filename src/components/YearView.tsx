@@ -22,12 +22,12 @@ export const YearView: Component = () => {
     return unassignedWeeks().filter((week) => !week.isVacation);
   });
 
-  // Group consecutive unassigned weeks
+  // Group consecutive unassigned weeks (including vacation weeks)
   const unassignedGroups = createMemo((): Week[][] => {
     const groups: Week[][] = [];
     let currentGroup: Week[] = [];
 
-    availableWeeks().forEach((week, index, arr) => {
+    unassignedWeeks().forEach((week, index, arr) => {
       if (currentGroup.length === 0) {
         currentGroup.push(week);
       } else {
