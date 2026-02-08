@@ -70,18 +70,17 @@ export const SPRINT_COLOR_MAP: Record<SprintColor, { bg: string; border: string;
 
 export const MAX_VACATION_WEEKS = 5;
 export const WEEKS_PER_SPRINT = 6;
-export const WEEKS_PER_YEAR = 52;
 
 // UI State types
 export interface EditModalState {
   open: boolean;
-  type: 'sprint' | 'week' | null;
+  type: 'sprint' | null;
   targetId: string | null;
 }
 
 export interface DragState {
   isDragging: boolean;
-  dragType: 'task' | 'week' | null;
+  dragType: 'task' | null;
   dragId: string | null;
   sourceWeekId: string | null;
 }

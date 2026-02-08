@@ -14,6 +14,41 @@ const App: Component = () => {
     window.location.reload();
   };
 
+  const handleExport = () => {
+    const data = StorageService.exportAll();
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `shapeup-planner-export-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result as string);
+          if (StorageService.importAll(data)) {
+            window.location.reload();
+          }
+        } catch {
+          alert('Invalid JSON file.');
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
+
   return (
     <div class="min-h-screen bg-surface-950">
       <header class="sticky top-0 z-40 border-b border-surface-800 bg-surface-950/80 backdrop-blur-md">
@@ -31,14 +66,20 @@ const App: Component = () => {
 
       <footer class="border-t border-surface-800 bg-surface-950/80 py-4">
         <div class="mx-auto flex max-w-[1800px] items-center justify-between px-4 lg:px-8">
-          <button
-            class="btn btn-ghost"
-            onClick={() => yearStore.seedYearPattern()}
-          >
-            Fill year pattern
-          </button>
-        </div>
-        <div class="mx-auto flex max-w-[1800px] items-center justify-end px-4 lg:px-8">
+          <div class="flex items-center gap-2">
+            <button
+              class="btn btn-ghost"
+              onClick={() => yearStore.seedYearPattern()}
+            >
+              Fill year pattern
+            </button>
+            <button class="btn btn-ghost" onClick={handleExport}>
+              Export data
+            </button>
+            <button class="btn btn-ghost" onClick={handleImport}>
+              Import data
+            </button>
+          </div>
           <button
             class="btn btn-ghost text-rose-300 hover:bg-rose-500/10"
             onClick={handleClearAll}

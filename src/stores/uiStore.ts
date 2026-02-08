@@ -25,9 +25,9 @@ export const uiStore = createRoot(() => {
   const [quickAddWeekId, setQuickAddWeekId] = createSignal<string | null>(null);
 
   /**
-   * Open the edit modal for a sprint or week
+   * Open the edit modal for a sprint
    */
-  function openEditModal(type: 'sprint' | 'week', targetId: string): void {
+  function openEditModal(type: 'sprint', targetId: string): void {
     setEditModal({
       open: true,
       type,
@@ -50,7 +50,7 @@ export const uiStore = createRoot(() => {
    * Start dragging
    */
   function startDrag(
-    type: 'task' | 'week',
+    type: 'task',
     id: string,
     sourceWeekId: string | null = null
   ): void {

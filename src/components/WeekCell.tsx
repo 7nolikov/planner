@@ -6,6 +6,7 @@ import { yearStore } from '../stores/yearStore';
 import { sprintStore } from '../stores/sprintStore';
 import { uiStore } from '../stores/uiStore';
 import { DragDropManager } from '../services/DragDropManager';
+import { YearGenerator } from '../services/YearGenerator';
 import { TaskItem } from './TaskItem';
 import { VacationBadge } from './VacationBadge';
 
@@ -19,6 +20,8 @@ interface WeekCellProps {
 export const WeekCell: Component<WeekCellProps> = (props) => {
   const [isAddingTask, setIsAddingTask] = createSignal(false);
   const [newTaskTitle, setNewTaskTitle] = createSignal('');
+
+  const isCurrentWeek = () => props.week.id === YearGenerator.getCurrentWeekId();
 
   const colorClasses = () => {
     if (props.sprintColor) {
@@ -94,7 +97,7 @@ export const WeekCell: Component<WeekCellProps> = (props) => {
     <div
       class={`week-cell flex flex-col ${props.week.isVacation ? 'vacation' : ''} ${
         isDropTarget() ? 'drop-target' : ''
-      } ${colorClasses()?.bg ?? ''} ${colorClasses()?.border ? `border-l-2 ${colorClasses()?.border}` : ''}`}
+      } ${isCurrentWeek() ? 'current-week' : ''} ${colorClasses()?.bg ?? ''} ${colorClasses()?.border ? `border-l-2 ${colorClasses()?.border}` : ''}`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -102,8 +105,9 @@ export const WeekCell: Component<WeekCellProps> = (props) => {
       {/* Header */}
       <div class="mb-2 flex items-start justify-between">
         <div class="flex flex-col">
-          <span class="text-xs font-medium text-surface-400">
+          <span class={`text-xs font-medium ${isCurrentWeek() ? 'text-sprint-azure' : 'text-surface-400'}`}>
             W{props.week.weekNumber}
+            {isCurrentWeek() && <span class="ml-1 text-sprint-azure">· Now</span>}
           </span>
           <span class="text-xs text-surface-500">{formatDateRange()}</span>
         </div>
@@ -149,11 +153,18 @@ export const WeekCell: Component<WeekCellProps> = (props) => {
           </button>
         </Show>
 
-        <Show when={!props.week.sprintId && yearStore.canAddVacation() && !props.week.isVacation}>
+        <Show when={!props.week.sprintId && !props.week.isVacation}>
           <button
             onClick={handleVacationToggle}
-            class="flex items-center gap-1 rounded px-2 py-1 text-xs text-surface-500 hover:bg-vacation/20 hover:text-vacation transition-colors"
-            title={`Set as vacation (${yearStore.vacationCount()}/${MAX_VACATION_WEEKS} used)`}
+            disabled={!yearStore.canAddVacation()}
+            class={`flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors ${
+              yearStore.canAddVacation()
+                ? 'text-surface-500 hover:bg-vacation/20 hover:text-vacation'
+                : 'text-surface-600 cursor-not-allowed opacity-50'
+            }`}
+            title={yearStore.canAddVacation()
+              ? `Set as vacation (${yearStore.vacationCount()}/${MAX_VACATION_WEEKS} used)`
+              : `Vacation limit reached (${MAX_VACATION_WEEKS}/${MAX_VACATION_WEEKS})`}
           >
             <Palmtree size={12} />
           </button>
