@@ -41,6 +41,32 @@ export const SprintDetailView: Component = () => {
     return s ? SPRINT_COLOR_MAP[s.colorTheme] : SPRINT_COLOR_MAP.azure;
   });
 
+  // Inline title editing
+  const [isEditingTitle, setIsEditingTitle] = createSignal(false);
+  const [editTitleValue, setEditTitleValue] = createSignal('');
+
+  const startTitleEdit = () => {
+    const s = sprint();
+    if (s) {
+      setEditTitleValue(s.title);
+      setIsEditingTitle(true);
+    }
+  };
+
+  const saveTitleEdit = () => {
+    const s = sprint();
+    const value = editTitleValue().trim();
+    if (s && value && value !== s.title) {
+      sprintStore.updateSprint(s.id, { title: value });
+    }
+    setIsEditingTitle(false);
+  };
+
+  const handleTitleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Enter') saveTitleEdit();
+    else if (e.key === 'Escape') setIsEditingTitle(false);
+  };
+
   const formatDateRange = () => {
     const w = weeks();
     if (w.length === 0) return '';
@@ -63,10 +89,29 @@ export const SprintDetailView: Component = () => {
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-3">
               <Target size={20} class={colorClasses().text} />
-              <h2 class="text-2xl font-bold text-white truncate">{sprint()!.title}</h2>
+              <Show when={isEditingTitle()} fallback={
+                <h2
+                  class="text-2xl font-bold text-white truncate cursor-text hover:opacity-80"
+                  onClick={startTitleEdit}
+                  title="Click to rename"
+                >
+                  {sprint()!.title}
+                </h2>
+              }>
+                <input
+                  type="text"
+                  value={editTitleValue()}
+                  onInput={(e) => setEditTitleValue(e.currentTarget.value)}
+                  onBlur={saveTitleEdit}
+                  onKeyDown={handleTitleKeyDown}
+                  class="bg-transparent text-2xl font-bold text-white outline-none border-b border-surface-500 w-full"
+                  autofocus
+                />
+              </Show>
               <button
                 onClick={() => uiStore.openEditModal('sprint', sprint()!.id)}
-                class="p-1.5 text-surface-400 hover:text-white hover:bg-surface-700 rounded transition-colors"
+                class="p-1.5 text-surface-400 hover:text-white hover:bg-surface-700 rounded transition-colors flex-shrink-0"
+                title="Edit sprint details"
               >
                 <Edit3 size={16} />
               </button>

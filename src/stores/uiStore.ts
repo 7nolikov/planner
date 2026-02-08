@@ -27,6 +27,11 @@ export const uiStore = createRoot(() => {
   // Drop target for visual feedback
   const [dropTargetId, setDropTargetId] = createSignal<string | null>(null);
 
+  // Toast notification
+  const [toastMessage, setToastMessage] = createSignal<string | null>(null);
+  const [toastAction, setToastAction] = createSignal<{ label: string; fn: () => void } | null>(null);
+  let toastTimer: ReturnType<typeof setTimeout> | undefined;
+
   // Quick add input state
   const [quickAddWeekId, setQuickAddWeekId] = createSignal<string | null>(null);
 
@@ -112,6 +117,22 @@ export const uiStore = createRoot(() => {
     setQuickAddWeekId(null);
   }
 
+  /**
+   * Show a toast message for a few seconds
+   */
+  function showToast(message: string, options?: { durationMs?: number; action?: { label: string; fn: () => void } }): void {
+    if (toastTimer) clearTimeout(toastTimer);
+    setToastMessage(message);
+    setToastAction(options?.action ?? null);
+    const duration = options?.durationMs ?? 3000;
+    toastTimer = setTimeout(() => { setToastMessage(null); setToastAction(null); }, duration);
+  }
+
+  function dismissToast(): void {
+    if (toastTimer) clearTimeout(toastTimer);
+    setToastMessage(null);
+    setToastAction(null);
+  }
 
   return {
     // State (reactive)
@@ -121,6 +142,8 @@ export const uiStore = createRoot(() => {
     get dragState() { return dragState; },
     get dropTargetId() { return dropTargetId(); },
     get quickAddWeekId() { return quickAddWeekId(); },
+    get toastMessage() { return toastMessage(); },
+    get toastAction() { return toastAction(); },
 
     // Actions
     navigateTo,
@@ -132,5 +155,7 @@ export const uiStore = createRoot(() => {
     setDropTarget,
     openQuickAdd,
     closeQuickAdd,
+    showToast,
+    dismissToast,
   };
 });

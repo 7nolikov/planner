@@ -22,7 +22,7 @@ export interface Week {
 export interface Sprint {
   id: string;
   title: string;
-  goalPitch: string;    // Markdown content
+  goalPitch: string;    // Goal description (plain text)
   colorTheme: SprintColor;
   weekIds: string[];    // Exactly 6 week references
   year: number;

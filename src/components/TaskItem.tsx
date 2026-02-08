@@ -35,6 +35,10 @@ export const TaskItem: Component<TaskItemProps> = (props) => {
 
   const handleDelete = () => {
     yearStore.deleteTask(props.weekId, props.task.id);
+    uiStore.showToast(`Deleted "${props.task.title}"`, {
+      durationMs: 5000,
+      action: { label: 'Undo', fn: () => yearStore.undo() },
+    });
   };
 
   const startEdit = () => {
