@@ -98,6 +98,37 @@
     @apply text-surface-200 hover:bg-surface-800 focus:ring-surface-600;
   }
 
+  /* View controls (segmented tab bar) */
+  .view-controls {
+    @apply inline-flex items-center gap-0.5 rounded-lg bg-surface-900 border border-surface-800 p-0.5;
+  }
+
+  .view-controls__tab {
+    @apply inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5;
+    @apply text-xs font-medium text-surface-400;
+    @apply transition-all duration-150;
+    @apply hover:text-surface-200 hover:bg-surface-800;
+    @apply focus:outline-none focus:ring-1 focus:ring-azure focus:ring-offset-1 focus:ring-offset-surface-950;
+  }
+
+  .view-controls__tab--active {
+    @apply bg-surface-800 text-white shadow-sm;
+  }
+
+  .view-controls__label {
+    @apply hidden xs:inline;
+  }
+
+  .view-controls__kbd {
+    @apply hidden md:inline-flex items-center justify-center;
+    @apply ml-0.5 h-4 min-w-[1rem] rounded px-0.5;
+    @apply bg-surface-700/60 text-[10px] text-surface-500 font-mono leading-none;
+  }
+
+  .view-controls__tab--active .view-controls__kbd {
+    @apply bg-surface-600/60 text-surface-400;
+  }
+
   .modal-overlay {
     @apply fixed inset-0 z-50 flex items-center justify-center;
     @apply bg-black/60 backdrop-blur-sm;
@@ -154,6 +185,11 @@
   }
 
   .btn:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease-out;
+  }
+
+  .view-controls__tab:active {
     transform: scale(0.95);
     transition: transform 0.1s ease-out;
   }

@@ -9,6 +9,10 @@ export const uiStore = createRoot(() => {
   const [activeView, setActiveView] = createSignal<ViewType>('year');
   const [activeViewId, setActiveViewId] = createSignal<string | null>(null);
 
+  // Track last viewed sprint/week for quick navigation
+  const [lastSprintId, setLastSprintId] = createSignal<string | null>(null);
+  const [lastWeekId, setLastWeekId] = createSignal<string | null>(null);
+
   // Edit modal state
   const [editModal, setEditModal] = createStore<EditModalState>({
     open: false,
@@ -38,6 +42,9 @@ export const uiStore = createRoot(() => {
   function navigateTo(view: ViewType, id?: string): void {
     setActiveView(view);
     setActiveViewId(id ?? null);
+    // Track last viewed IDs for quick navigation
+    if (view === 'sprint' && id) setLastSprintId(id);
+    if (view === 'week' && id) setLastWeekId(id);
   }
 
   function navigateBack(): void {
@@ -141,6 +148,8 @@ export const uiStore = createRoot(() => {
     get editModal() { return editModal; },
     get dragState() { return dragState; },
     get dropTargetId() { return dropTargetId(); },
+    get lastSprintId() { return lastSprintId(); },
+    get lastWeekId() { return lastWeekId(); },
     get quickAddWeekId() { return quickAddWeekId(); },
     get toastMessage() { return toastMessage(); },
     get toastAction() { return toastAction(); },
