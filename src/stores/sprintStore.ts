@@ -24,36 +24,43 @@ export const sprintStore = createRoot(() => {
   }
 
   /**
-   * Create a new sprint starting from a week
+   * Create a new sprint starting from a week.
+   * Returns { sprint } on success or { error } with a message on failure.
    */
-  function createSprint(startWeekId: string, title?: string): Sprint | null {
-    // Find the starting week
+  function createSprint(startWeekId: string, title?: string): { sprint: Sprint } | { error: string } {
     const startWeekIndex = yearStore.weeks.findIndex((w) => w.id === startWeekId);
-    if (startWeekIndex === -1) return null;
+    if (startWeekIndex === -1) return { error: 'Week not found.' };
 
-    // Get 6 consecutive available weeks starting from this one
     const weekIds: string[] = [];
     let currentIndex = startWeekIndex;
+    let blockedByVacation = false;
+    let blockedBySprint = false;
 
     while (weekIds.length < WEEKS_PER_SPRINT && currentIndex < yearStore.weeks.length) {
       const week = yearStore.weeks[currentIndex];
-      
-      // Skip vacation weeks and already assigned weeks
+
       if (!week.isVacation && week.sprintId === null) {
         weekIds.push(week.id);
       } else if (week.isVacation) {
-        // Vacation found, can't continue
+        blockedByVacation = true;
         break;
       } else if (week.sprintId !== null) {
-        // Already in a sprint, skip
-        currentIndex++;
-        continue;
+        blockedBySprint = true;
+        break;
       }
       currentIndex++;
     }
 
-    // Need exactly 6 weeks
-    if (weekIds.length !== WEEKS_PER_SPRINT) return null;
+    if (weekIds.length !== WEEKS_PER_SPRINT) {
+      const n = weekIds.length;
+      if (blockedByVacation) {
+        return { error: `Only ${n} free week${n !== 1 ? 's' : ''} before a vacation week. Need ${WEEKS_PER_SPRINT}.` };
+      }
+      if (blockedBySprint) {
+        return { error: `Only ${n} free week${n !== 1 ? 's' : ''} before the next sprint. Need ${WEEKS_PER_SPRINT}.` };
+      }
+      return { error: `Only ${n} week${n !== 1 ? 's' : ''} available from here. Need ${WEEKS_PER_SPRINT}.` };
+    }
 
     const sprint: Sprint = {
       id: generateId(),
@@ -73,7 +80,7 @@ export const sprintStore = createRoot(() => {
       yearStore.assignWeekToSprint(weekId, sprint.id);
     });
 
-    return sprint;
+    return { sprint };
   }
 
   /**

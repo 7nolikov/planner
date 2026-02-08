@@ -88,7 +88,10 @@ export const WeekCell: Component<WeekCellProps> = (props) => {
   };
 
   const handleCreateSprint = () => {
-    sprintStore.createSprint(props.week.id);
+    const result = sprintStore.createSprint(props.week.id);
+    if ('error' in result) {
+      uiStore.showToast(result.error);
+    }
   };
 
   const isDropTarget = () => uiStore.dropTargetId === props.week.id;

@@ -1,4 +1,4 @@
-import { Component, For, Show, createMemo } from 'solid-js';
+import { Component, For, Show, createMemo, createSignal } from 'solid-js';
 import { Edit3, Target, Trash2, Check } from 'lucide-solid';
 import type { Sprint } from '../types';
 import { SPRINT_COLOR_MAP } from '../types';
@@ -32,14 +32,39 @@ export const SprintCard: Component<SprintCardProps> = (props) => {
 
   const colorClasses = () => SPRINT_COLOR_MAP[props.sprint.colorTheme];
 
+  // Inline title editing
+  const [isEditingTitle, setIsEditingTitle] = createSignal(false);
+  const [editTitleValue, setEditTitleValue] = createSignal('');
+
+  const startTitleEdit = () => {
+    setEditTitleValue(props.sprint.title);
+    setIsEditingTitle(true);
+  };
+
+  const saveTitleEdit = () => {
+    const value = editTitleValue().trim();
+    if (value && value !== props.sprint.title) {
+      sprintStore.updateSprint(props.sprint.id, { title: value });
+    }
+    setIsEditingTitle(false);
+  };
+
+  const handleTitleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Enter') saveTitleEdit();
+    else if (e.key === 'Escape') setIsEditingTitle(false);
+  };
+
   const handleEdit = () => {
     uiStore.openEditModal('sprint', props.sprint.id);
   };
 
   const handleDelete = () => {
-    if (confirm(`Delete sprint "${props.sprint.title}"? Weeks will remain but won't be grouped.`)) {
-      sprintStore.deleteSprint(props.sprint.id);
-    }
+    const title = props.sprint.title;
+    sprintStore.deleteSprint(props.sprint.id);
+    uiStore.showToast(`Deleted "${title}"`, {
+      durationMs: 5000,
+      action: { label: 'Undo', fn: () => yearStore.undo() },
+    });
   };
 
   const handleOpenSprint = () => {
@@ -65,9 +90,26 @@ export const SprintCard: Component<SprintCardProps> = (props) => {
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2">
               <Target size={16} class={colorClasses().text} />
-              <button onClick={handleOpenSprint} class="font-semibold text-white truncate hover:underline text-left">
-                {props.sprint.title}
-              </button>
+              <Show when={isEditingTitle()} fallback={
+                <button
+                  onClick={handleOpenSprint}
+                  onDblClick={(e) => { e.stopPropagation(); startTitleEdit(); }}
+                  class="font-semibold text-white truncate hover:underline text-left"
+                  title="Click to view, double-click to rename"
+                >
+                  {props.sprint.title}
+                </button>
+              }>
+                <input
+                  type="text"
+                  value={editTitleValue()}
+                  onInput={(e) => setEditTitleValue(e.currentTarget.value)}
+                  onBlur={saveTitleEdit}
+                  onKeyDown={handleTitleKeyDown}
+                  class="bg-transparent font-semibold text-white outline-none border-b border-surface-500 px-0 py-0 w-full"
+                  autofocus
+                />
+              </Show>
             </div>
             <div class="mt-1 flex items-center gap-3">
               <span class="text-xs text-surface-400">

@@ -20,6 +20,23 @@ export const yearStore = createRoot(() => {
     vacationWeekIds: [],
   });
 
+  // Undo: single-level snapshot before destructive operations
+  const [undoSnapshot, setUndoSnapshot] = createSignal<{ data: YearData; label: string } | null>(null);
+
+  function takeSnapshot(label: string): void {
+    const data = JSON.parse(JSON.stringify(yearData)) as YearData;
+    setUndoSnapshot({ data, label });
+  }
+
+  function undo(): boolean {
+    const snap = undoSnapshot();
+    if (!snap) return false;
+    setYearData(snap.data);
+    saveCurrentYear();
+    setUndoSnapshot(null);
+    return true;
+  }
+
   /**
    * Initialize or load year data
    */
@@ -38,15 +55,6 @@ export const yearStore = createRoot(() => {
   // Initialize on first load
   initializeYear(currentYear());
   StorageService.saveCurrentYear(currentYear());
-
-  /**
-   * Get weeks that are not part of any sprint and not vacation
-   */
-  const availableWeeks = createMemo(() => {
-    return yearData.weeks.filter(
-      (week) => week.sprintId === null && !week.isVacation
-    );
-  });
 
   /**
    * Get the count of vacation weeks
@@ -161,6 +169,7 @@ export const yearStore = createRoot(() => {
    * Delete a task
    */
   function deleteTask(weekId: string, taskId: string): void {
+    takeSnapshot('task deletion');
     setYearData(
       produce((state) => {
         const weekIndex = state.weeks.findIndex((w) => w.id === weekId);
@@ -247,6 +256,7 @@ export const yearStore = createRoot(() => {
    * Remove a sprint from the year data
    */
   function removeSprint(sprintId: string): void {
+    takeSnapshot('sprint deletion');
     setYearData(
       produce((state) => {
         const index = state.sprints.findIndex((s) => s.id === sprintId);
@@ -262,6 +272,7 @@ export const yearStore = createRoot(() => {
    * Seed year with 8 sprints and vacation weeks pattern
    */
   function seedYearPattern(): void {
+    takeSnapshot('year pattern fill');
     const totalWeeks = yearData.weeks.length;
     const totalSprintWeeks = 8 * 6;
     const remainingVacationWeeks = Math.max(0, totalWeeks - totalSprintWeeks);
@@ -358,12 +369,13 @@ export const yearStore = createRoot(() => {
     get year() { return currentYear(); },
     get weeks() { return yearData.weeks; },
     get vacationWeekIds() { return yearData.vacationWeekIds; },
-    availableWeeks,
     vacationCount,
     canAddVacation,
-    
+    get undoLabel() { const s = undoSnapshot(); return s ? s.label : null; },
+
     // Actions
     setYear,
+    undo,
     getWeek,
     getWeeksBySprint,
     toggleVacation,
