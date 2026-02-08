@@ -104,13 +104,13 @@ export const WeekCell: Component<WeekCellProps> = (props) => {
     >
       {/* Header */}
       <div class="mb-2 flex items-start justify-between">
-        <div class="flex flex-col">
+        <button onClick={() => uiStore.navigateTo('week', props.week.id)} class="flex flex-col text-left hover:opacity-80">
           <span class={`text-xs font-medium ${isCurrentWeek() ? 'text-sprint-azure' : 'text-surface-400'}`}>
             W{props.week.weekNumber}
             {isCurrentWeek() && <span class="ml-1 text-sprint-azure">· Now</span>}
           </span>
           <span class="text-xs text-surface-500">{formatDateRange()}</span>
-        </div>
+        </button>
         
         <Show when={props.week.isVacation}>
           <VacationBadge />

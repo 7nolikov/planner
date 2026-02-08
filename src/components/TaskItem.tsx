@@ -1,5 +1,5 @@
 import { Component, createSignal, Show } from 'solid-js';
-import { Check, GripVertical, Trash2, X } from 'lucide-solid';
+import { Check, GripVertical, Trash2 } from 'lucide-solid';
 import type { Task } from '../types';
 import { yearStore } from '../stores/yearStore';
 import { uiStore } from '../stores/uiStore';
