@@ -2,7 +2,6 @@ import { Component, Show, createSignal, createEffect, onMount, onCleanup } from 
 import { X, Save, Palette } from 'lucide-solid';
 import { uiStore } from '../stores/uiStore';
 import { sprintStore } from '../stores/sprintStore';
-import { yearStore } from '../stores/yearStore';
 import { SPRINT_COLORS, SPRINT_COLOR_MAP, type SprintColor } from '../types';
 
 export const EditModal: Component = () => {
@@ -63,10 +62,7 @@ export const EditModal: Component = () => {
       <div class="modal-content" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-xl font-semibold">
-            <Show when={uiStore.editModal.type === 'sprint'}>Edit Sprint</Show>
-            <Show when={uiStore.editModal.type === 'week'}>Edit Week</Show>
-          </h2>
+          <h2 class="text-xl font-semibold">Edit Sprint</h2>
           <button
             onClick={handleClose}
             class="p-2 text-surface-400 hover:text-white hover:bg-surface-800 rounded-lg transition-colors"

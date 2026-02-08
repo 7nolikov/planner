@@ -203,36 +203,6 @@ export const yearStore = createRoot(() => {
   }
 
   /**
-   * Reorder weeks
-   */
-  function reorderWeeks(fromOrder: number, toOrder: number): void {
-    setYearData(
-      produce((state) => {
-        // Update order values
-        state.weeks.forEach((week) => {
-          if (week.order === fromOrder) {
-            week.order = toOrder;
-          } else if (fromOrder < toOrder) {
-            // Moving down: shift others up
-            if (week.order > fromOrder && week.order <= toOrder) {
-              week.order--;
-            }
-          } else {
-            // Moving up: shift others down
-            if (week.order >= toOrder && week.order < fromOrder) {
-              week.order++;
-            }
-          }
-        });
-        
-        // Sort by order
-        state.weeks.sort((a, b) => a.order - b.order);
-      })
-    );
-    saveCurrentYear();
-  }
-
-  /**
    * Update week's sprint assignment
    */
   function assignWeekToSprint(weekId: string, sprintId: string | null): void {
@@ -401,7 +371,6 @@ export const yearStore = createRoot(() => {
     updateTask,
     deleteTask,
     moveTask,
-    reorderWeeks,
     assignWeekToSprint,
     addSprint,
     updateSprintData,

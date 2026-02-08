@@ -49,11 +49,6 @@ export const YearView: Component = () => {
     return yearStore.weeks.filter((week) => week.isVacation);
   });
 
-  // Get unassigned non-vacation weeks
-  const availableWeeks = createMemo(() => {
-    return unassignedWeeks();
-  });
-
   // Group consecutive unassigned weeks
   const unassignedGroups = createMemo((): Week[][] => groupConsecutiveWeeks(unassignedWeeks()));
   const vacationGroups = createMemo((): Week[][] => groupConsecutiveWeeks(vacationWeeks()));
@@ -116,7 +111,7 @@ export const YearView: Component = () => {
         </div>
         <div class="flex items-center gap-2">
           <span class="h-1.5 w-1.5 rounded-full bg-surface-500" />
-          <span>{availableWeeks().length} available weeks</span>
+          <span>{unassignedWeeks().length} available weeks</span>
         </div>
       </div>
 

@@ -74,14 +74,6 @@ export const StorageService = {
   },
 
   /**
-   * Check if year data exists
-   */
-  hasYear(year: number): boolean {
-    const key = this.getKey(year);
-    return localStorage.getItem(key) !== null;
-  },
-
-  /**
    * Delete year data
    */
   deleteYear(year: number): boolean {
