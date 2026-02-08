@@ -2,7 +2,13 @@ import { createSignal, createRoot } from 'solid-js';
 import { createStore } from 'solid-js/store';
 import type { EditModalState, DragState } from '../types';
 
+export type ViewType = 'year' | 'sprint' | 'week';
+
 export const uiStore = createRoot(() => {
+  // View navigation
+  const [activeView, setActiveView] = createSignal<ViewType>('year');
+  const [activeViewId, setActiveViewId] = createSignal<string | null>(null);
+
   // Edit modal state
   const [editModal, setEditModal] = createStore<EditModalState>({
     open: false,
@@ -23,6 +29,16 @@ export const uiStore = createRoot(() => {
 
   // Quick add input state
   const [quickAddWeekId, setQuickAddWeekId] = createSignal<string | null>(null);
+
+  function navigateTo(view: ViewType, id?: string): void {
+    setActiveView(view);
+    setActiveViewId(id ?? null);
+  }
+
+  function navigateBack(): void {
+    setActiveView('year');
+    setActiveViewId(null);
+  }
 
   /**
    * Open the edit modal for a sprint
@@ -99,12 +115,16 @@ export const uiStore = createRoot(() => {
 
   return {
     // State (reactive)
+    get activeView() { return activeView(); },
+    get activeViewId() { return activeViewId(); },
     get editModal() { return editModal; },
     get dragState() { return dragState; },
     get dropTargetId() { return dropTargetId(); },
     get quickAddWeekId() { return quickAddWeekId(); },
-    
+
     // Actions
+    navigateTo,
+    navigateBack,
     openEditModal,
     closeEditModal,
     startDrag,

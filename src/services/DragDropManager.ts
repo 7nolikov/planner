@@ -1,22 +1,20 @@
 import type { DragState } from '../types';
 
-export type DragType = 'task' | 'week';
-
 export interface DragData {
-  type: DragType;
+  type: 'task';
   id: string;
   sourceWeekId?: string;
 }
 
 /**
- * DragDropManager handles drag-and-drop operations for tasks and weeks.
+ * DragDropManager handles drag-and-drop operations for tasks.
  * Uses native HTML5 drag events for performance.
  */
 export const DragDropManager = {
   /**
    * Create drag data to attach to the drag event
    */
-  createDragData(type: DragType, id: string, sourceWeekId?: string): string {
+  createDragData(type: 'task', id: string, sourceWeekId?: string): string {
     const data: DragData = { type, id, sourceWeekId };
     return JSON.stringify(data);
   },
@@ -39,7 +37,7 @@ export const DragDropManager = {
    */
   handleDragStart(
     event: DragEvent,
-    type: DragType,
+    type: 'task',
     id: string,
     sourceWeekId?: string
   ): DragState {
@@ -86,21 +84,8 @@ export const DragDropManager = {
    */
   isValidDrop(
     dragData: DragData,
-    targetType: 'week' | 'task-slot',
-    targetId: string
+    targetWeekId: string
   ): boolean {
-    // Tasks can be dropped into weeks
-    if (dragData.type === 'task' && targetType === 'week') {
-      // Can't drop on the same week if no reordering
-      return dragData.sourceWeekId !== targetId;
-    }
-
-    // Weeks can be reordered
-    if (dragData.type === 'week' && targetType === 'week') {
-      return dragData.id !== targetId;
-    }
-
-    return false;
+    return dragData.type === 'task' && dragData.sourceWeekId !== targetWeekId;
   },
 };
-

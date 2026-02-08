@@ -1,5 +1,5 @@
 import { Component, For, Show, createMemo } from 'solid-js';
-import { Edit3, Target, Trash2 } from 'lucide-solid';
+import { Edit3, Target, Trash2, Check } from 'lucide-solid';
 import type { Sprint } from '../types';
 import { SPRINT_COLOR_MAP } from '../types';
 import { yearStore } from '../stores/yearStore';
@@ -18,6 +18,18 @@ export const SprintCard: Component<SprintCardProps> = (props) => {
       .filter((w): w is NonNullable<typeof w> => w !== undefined);
   });
 
+  const totalTasks = createMemo(() =>
+    weeks().reduce((sum, w) => sum + w.tasks.length, 0)
+  );
+
+  const completedTasks = createMemo(() =>
+    weeks().reduce((sum, w) => sum + w.tasks.filter((t) => t.completed).length, 0)
+  );
+
+  const progressPercent = createMemo(() =>
+    totalTasks() === 0 ? 0 : Math.round((completedTasks() / totalTasks()) * 100)
+  );
+
   const colorClasses = () => SPRINT_COLOR_MAP[props.sprint.colorTheme];
 
   const handleEdit = () => {
@@ -30,14 +42,18 @@ export const SprintCard: Component<SprintCardProps> = (props) => {
     }
   };
 
+  const handleOpenSprint = () => {
+    uiStore.navigateTo('sprint', props.sprint.id);
+  };
+
   const formatDateRange = () => {
     const firstWeek = weeks()[0];
     const lastWeek = weeks()[weeks().length - 1];
     if (!firstWeek || !lastWeek) return '';
-    
+
     const start = new Date(firstWeek.startDate);
     const end = new Date(lastWeek.endDate);
-    
+
     return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
   };
 
@@ -49,15 +65,23 @@ export const SprintCard: Component<SprintCardProps> = (props) => {
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2">
               <Target size={16} class={colorClasses().text} />
-              <h3 class="font-semibold text-white truncate">
+              <button onClick={handleOpenSprint} class="font-semibold text-white truncate hover:underline text-left">
                 {props.sprint.title}
-              </h3>
+              </button>
             </div>
-            <p class="mt-1 text-xs text-surface-400">
-              {formatDateRange()} · 6 weeks
-            </p>
+            <div class="mt-1 flex items-center gap-3">
+              <span class="text-xs text-surface-400">
+                {formatDateRange()} · 6 weeks
+              </span>
+              <Show when={totalTasks() > 0}>
+                <span class="text-xs text-surface-400 flex items-center gap-1">
+                  <Check size={10} />
+                  {completedTasks()}/{totalTasks()}
+                </span>
+              </Show>
+            </div>
           </div>
-          
+
           <div class="flex items-center gap-1 flex-shrink-0">
             <button
               onClick={handleEdit}
@@ -82,6 +106,19 @@ export const SprintCard: Component<SprintCardProps> = (props) => {
             {props.sprint.goalPitch}
           </p>
         </Show>
+
+        {/* Progress bar */}
+        <Show when={totalTasks() > 0}>
+          <div class="mt-3 h-1.5 rounded-full bg-surface-800/50 overflow-hidden">
+            <div
+              class="h-full rounded-full transition-all duration-300"
+              style={{
+                width: `${progressPercent()}%`,
+                'background-color': `var(--sprint-${props.sprint.colorTheme})`,
+              }}
+            />
+          </div>
+        </Show>
       </div>
 
       {/* Weeks grid */}
@@ -102,4 +139,3 @@ export const SprintCard: Component<SprintCardProps> = (props) => {
     </div>
   );
 };
-

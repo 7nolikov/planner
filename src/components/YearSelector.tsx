@@ -1,14 +1,17 @@
 import { Component } from 'solid-js';
 import { ChevronLeft, ChevronRight } from 'lucide-solid';
 import { yearStore } from '../stores/yearStore';
+import { uiStore } from '../stores/uiStore';
 
 export const YearSelector: Component = () => {
   const handlePrevYear = () => {
     yearStore.setYear(yearStore.year - 1);
+    uiStore.navigateBack();
   };
 
   const handleNextYear = () => {
     yearStore.setYear(yearStore.year + 1);
+    uiStore.navigateBack();
   };
 
   return (
