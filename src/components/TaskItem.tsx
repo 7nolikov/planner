@@ -74,10 +74,10 @@ export const TaskItem: Component<TaskItemProps> = (props) => {
       onDragEnd={handleDragEnd}
     >
       <button
-        class="mt-0.5 flex-shrink-0 text-surface-500 hover:text-surface-300 cursor-grab"
+        class="mt-0.5 flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center text-surface-500 hover:text-surface-300 cursor-grab"
         aria-label="Drag to reorder"
       >
-        <GripVertical size={14} />
+        <GripVertical size={12} />
       </button>
 
       <button
@@ -120,12 +120,11 @@ export const TaskItem: Component<TaskItemProps> = (props) => {
 
       <button
         onClick={handleDelete}
-        class="flex-shrink-0 text-surface-600 opacity-0 transition-opacity hover:text-red-400 group-hover:opacity-100"
+        class="flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center text-surface-400 transition-colors hover:text-red-400"
         aria-label="Delete task"
       >
-        <Trash2 size={14} />
+        <Trash2 size={12} />
       </button>
     </div>
   );
 };
-
