@@ -1,5 +1,5 @@
 import { Component, For, Show, createMemo, createSignal } from 'solid-js';
-import { ArrowLeft, Edit3, Target, Plus, Check } from 'lucide-solid';
+import { ArrowLeft, ArrowRight, ChevronUp, Edit3, Target, Plus, Check } from 'lucide-solid';
 import type { Week } from '../types';
 import { SPRINT_COLOR_MAP } from '../types';
 import { yearStore } from '../stores/yearStore';
@@ -35,6 +35,18 @@ export const SprintDetailView: Component = () => {
   const progressPercent = createMemo(() =>
     totalTasks() === 0 ? 0 : Math.round((completedTasks() / totalTasks()) * 100)
   );
+
+  const sprintNavigation = createMemo(() => {
+    const s = sprint();
+    const ordered = sprintStore.sortedSprints();
+    if (!s || ordered.length === 0) return { previousId: null as string | null, nextId: null as string | null };
+    const index = ordered.findIndex((item) => item.id === s.id);
+    if (index === -1) return { previousId: null as string | null, nextId: null as string | null };
+    return {
+      previousId: index > 0 ? ordered[index - 1].id : null,
+      nextId: index < ordered.length - 1 ? ordered[index + 1].id : null,
+    };
+  });
 
   const colorClasses = createMemo(() => {
     const s = sprint();
@@ -79,14 +91,16 @@ export const SprintDetailView: Component = () => {
     <Show when={sprint()} fallback={<div class="text-surface-500 text-center py-12">Sprint not found</div>}>
       <div class="space-y-6 animate-fade-in">
         {/* Header */}
-        <div class="flex items-start gap-4">
-          <button
-            onClick={() => uiStore.navigateBack()}
-            class="mt-1 p-2 text-surface-400 hover:text-white hover:bg-surface-800 rounded-lg transition-colors"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div class="flex-1 min-w-0">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div class="flex items-start gap-4">
+            <button
+              onClick={() => uiStore.navigateBack()}
+              class="mt-1 p-2 text-surface-400 hover:text-white hover:bg-surface-800 rounded-lg transition-colors"
+              title="Up to year"
+            >
+              <ChevronUp size={20} />
+            </button>
+            <div class="flex-1 min-w-0">
             <div class="flex items-center gap-3">
               <Target size={20} class={colorClasses().text} />
               <Show when={isEditingTitle()} fallback={
@@ -117,6 +131,34 @@ export const SprintDetailView: Component = () => {
               </button>
             </div>
             <p class="mt-1 text-sm text-surface-400">{formatDateRange()}</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button
+              onClick={() => {
+                const id = sprintNavigation().previousId;
+                if (id) uiStore.navigateTo('sprint', id);
+              }}
+              disabled={!sprintNavigation().previousId}
+              class="btn btn-ghost disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Previous sprint"
+            >
+              <ArrowLeft size={16} />
+              Previous
+            </button>
+            <button
+              onClick={() => {
+                const id = sprintNavigation().nextId;
+                if (id) uiStore.navigateTo('sprint', id);
+              }}
+              disabled={!sprintNavigation().nextId}
+              class="btn btn-ghost disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Next sprint"
+            >
+              Next
+              <ArrowRight size={16} />
+            </button>
           </div>
         </div>
 
