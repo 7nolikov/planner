@@ -68,13 +68,13 @@ export const TaskItem: Component<TaskItemProps> = (props) => {
 
   return (
     <div
-      class="task-item group flex items-center gap-2"
+      class="task-item group flex items-start gap-2"
       draggable={!isEditing()}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
       <button
-        class="flex-shrink-0 text-surface-500 hover:text-surface-300 cursor-grab"
+        class="mt-0.5 flex-shrink-0 text-surface-500 hover:text-surface-300 cursor-grab"
         aria-label="Drag to reorder"
       >
         <GripVertical size={14} />
@@ -82,7 +82,7 @@ export const TaskItem: Component<TaskItemProps> = (props) => {
 
       <button
         onClick={handleToggleComplete}
-        class={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded border transition-colors ${
+        class={`mt-0.5 flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded border transition-colors ${
           props.task.completed
             ? 'border-emerald-500 bg-emerald-500 text-white'
             : 'border-surface-600 hover:border-surface-500'
@@ -90,7 +90,7 @@ export const TaskItem: Component<TaskItemProps> = (props) => {
         aria-label={props.task.completed ? 'Mark incomplete' : 'Mark complete'}
       >
         <Show when={props.task.completed}>
-          <Check size={10} />
+          <Check size={12} />
         </Show>
       </button>
 
@@ -103,14 +103,14 @@ export const TaskItem: Component<TaskItemProps> = (props) => {
             onInput={(e) => setEditValue(e.currentTarget.value)}
             onBlur={saveEdit}
             onKeyDown={handleKeyDown}
-            class="flex-1 bg-transparent px-1 text-sm outline-none"
+            class="flex-1 min-w-0 bg-transparent px-1 text-sm outline-none"
             autofocus
           />
         }
       >
         <span
           onClick={startEdit}
-          class={`flex-1 cursor-text truncate text-sm ${
+          class={`flex-1 min-w-0 cursor-text text-sm break-words ${
             props.task.completed ? 'text-surface-500 line-through' : 'text-surface-200'
           }`}
         >

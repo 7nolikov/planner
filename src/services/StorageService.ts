@@ -1,7 +1,8 @@
-import type { YearData } from '../types';
+import type { YearData, CycleMode } from '../types';
 
 const STORAGE_KEY_PREFIX = 'shapeup-planner';
 const CURRENT_YEAR_KEY = `${STORAGE_KEY_PREFIX}-current-year`;
+const CYCLE_MODE_KEY = `${STORAGE_KEY_PREFIX}-cycle-mode`;
 
 /**
  * StorageService provides a clean abstraction over localStorage.
@@ -137,6 +138,32 @@ export const StorageService = {
     } catch (error) {
       console.error('Failed to import data:', error);
       return false;
+    }
+  },
+
+  /**
+   * Save the cycle mode preference
+   */
+  saveCycleMode(mode: CycleMode): boolean {
+    try {
+      localStorage.setItem(CYCLE_MODE_KEY, mode);
+      return true;
+    } catch (error) {
+      console.error('Failed to save cycle mode:', error);
+      return false;
+    }
+  },
+
+  /**
+   * Load the cycle mode preference
+   */
+  loadCycleMode(): CycleMode {
+    try {
+      const stored = localStorage.getItem(CYCLE_MODE_KEY);
+      if (stored === '6-cycles' || stored === '8-cycles') return stored;
+      return '8-cycles';
+    } catch {
+      return '8-cycles';
     }
   },
 
