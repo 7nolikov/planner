@@ -71,6 +71,23 @@ export const SPRINT_COLOR_MAP: Record<SprintColor, { bg: string; border: string;
 export const MAX_VACATION_WEEKS = 5;
 export const WEEKS_PER_SPRINT = 6;
 
+export type CycleMode = '6-cycles' | '8-cycles';
+
+export const CYCLE_MODE_INFO: Record<CycleMode, { label: string; description: string; sprints: number; cooldownWeeks: number }> = {
+  '6-cycles': {
+    label: '6 Cycles',
+    description: '6 sprints + 2-week cooldowns',
+    sprints: 6,
+    cooldownWeeks: 2,
+  },
+  '8-cycles': {
+    label: '8 Cycles',
+    description: '8 sprints + vacation weeks',
+    sprints: 8,
+    cooldownWeeks: 0,
+  },
+};
+
 // UI State types
 export interface EditModalState {
   open: boolean;

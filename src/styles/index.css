@@ -197,12 +197,23 @@
 
 /* Ensure minimum touch targets (44px) */
 @media (hover: none) {
-  button, 
+  button,
   [role="button"],
-  input[type="checkbox"],
-  .task-item {
+  input[type="checkbox"] {
     min-height: 44px;
     min-width: 44px;
+  }
+
+  /* Task items handle their own touch targets via padding */
+  .task-item {
+    min-height: 44px;
+  }
+
+  /* Inline controls within task items should not inflate to 44px */
+  .task-item button,
+  .task-item [role="button"] {
+    min-height: unset;
+    min-width: unset;
   }
 }
 

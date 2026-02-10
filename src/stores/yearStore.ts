@@ -1,7 +1,7 @@
 import { createSignal, createRoot, createMemo } from 'solid-js';
 import { createStore, produce } from 'solid-js/store';
-import type { Week, YearData, Task, Sprint } from '../types';
-import { generateId, MAX_VACATION_WEEKS, SPRINT_COLORS } from '../types';
+import type { Week, YearData, Task, Sprint, CycleMode } from '../types';
+import { generateId, MAX_VACATION_WEEKS, SPRINT_COLORS, CYCLE_MODE_INFO } from '../types';
 import { StorageService } from '../services/StorageService';
 import { YearGenerator } from '../services/YearGenerator';
 
@@ -19,6 +19,14 @@ export const yearStore = createRoot(() => {
     sprints: [],
     vacationWeekIds: [],
   });
+
+  // Cycle mode preference
+  const [cycleMode, setCycleModeSignal] = createSignal<CycleMode>(StorageService.loadCycleMode());
+
+  function setCycleMode(mode: CycleMode): void {
+    setCycleModeSignal(mode);
+    StorageService.saveCycleMode(mode);
+  }
 
   // Undo: single-level snapshot before destructive operations
   const [undoSnapshot, setUndoSnapshot] = createSignal<{ data: YearData; label: string } | null>(null);
@@ -269,13 +277,16 @@ export const yearStore = createRoot(() => {
   }
 
   /**
-   * Seed year with 8 sprints and vacation weeks pattern
+   * Seed year with sprints based on current cycle mode.
+   * 8-cycles: 8 sprints (6 weeks each) + vacation weeks
+   * 6-cycles: 6 sprints (6 weeks each) + 2-week cooldowns between sprints + vacation flex
    */
   function seedYearPattern(): void {
     takeSnapshot('year pattern fill');
-    const totalWeeks = yearData.weeks.length;
-    const totalSprintWeeks = 8 * 6;
-    const remainingVacationWeeks = Math.max(0, totalWeeks - totalSprintWeeks);
+    const mode = cycleMode();
+    const info = CYCLE_MODE_INFO[mode];
+    const targetSprints = info.sprints;
+    const cooldownWeeks = info.cooldownWeeks;
 
     setYearData(
       produce((state) => {
@@ -291,23 +302,22 @@ export const yearStore = createRoot(() => {
         let weekIndex = 0;
         let sprintOrder = 0;
 
-        while (sprintOrder < 8 && weekIndex < state.weeks.length) {
-          for (let sprintOffset = 0; sprintOffset < 2 && sprintOrder < 8; sprintOffset++) {
+        if (mode === '6-cycles') {
+          // 6-cycles: sprint(6w) → cooldown(2w) → sprint(6w) → cooldown(2w) → ...
+          while (sprintOrder < targetSprints && weekIndex < state.weeks.length) {
+            // Create 6-week sprint
             const weekIds: string[] = [];
             for (let i = 0; i < 6 && weekIndex < state.weeks.length; i++) {
-              const week = state.weeks[weekIndex];
-              weekIds.push(week.id);
+              weekIds.push(state.weeks[weekIndex].id);
               weekIndex += 1;
             }
 
-            if (weekIds.length < 6) {
-              break;
-            }
+            if (weekIds.length < 6) break;
 
             const sprintId = generateId();
             state.sprints.push({
               id: sprintId,
-              title: `Sprint ${sprintOrder + 1}`,
+              title: `Cycle ${sprintOrder + 1}`,
               goalPitch: '',
               colorTheme: SPRINT_COLORS[sprintOrder % SPRINT_COLORS.length],
               weekIds,
@@ -317,27 +327,72 @@ export const yearStore = createRoot(() => {
 
             weekIds.forEach((weekId) => {
               const week = state.weeks.find((w) => w.id === weekId);
-              if (week) {
-                week.sprintId = sprintId;
-              }
+              if (week) week.sprintId = sprintId;
             });
 
             sprintOrder += 1;
+
+            // Add cooldown weeks (unassigned, not vacation)
+            for (let i = 0; i < cooldownWeeks && weekIndex < state.weeks.length; i++) {
+              weekIndex += 1;
+            }
           }
 
-          if (weekIndex < state.weeks.length) {
+          // Remaining weeks become vacation/flex
+          while (weekIndex < state.weeks.length) {
             const week = state.weeks[weekIndex];
             week.isVacation = true;
             state.vacationWeekIds.push(week.id);
             weekIndex += 1;
           }
-        }
+        } else {
+          // 8-cycles: 2 sprints → 1 vacation → 2 sprints → 1 vacation → ...
+          const totalSprintWeeks = targetSprints * 6;
+          const remainingVacationWeeks = Math.max(0, state.weeks.length - totalSprintWeeks);
 
-        while (state.vacationWeekIds.length < remainingVacationWeeks && weekIndex < state.weeks.length) {
-          const week = state.weeks[weekIndex];
-          week.isVacation = true;
-          state.vacationWeekIds.push(week.id);
-          weekIndex += 1;
+          while (sprintOrder < targetSprints && weekIndex < state.weeks.length) {
+            for (let sprintOffset = 0; sprintOffset < 2 && sprintOrder < targetSprints; sprintOffset++) {
+              const weekIds: string[] = [];
+              for (let i = 0; i < 6 && weekIndex < state.weeks.length; i++) {
+                weekIds.push(state.weeks[weekIndex].id);
+                weekIndex += 1;
+              }
+
+              if (weekIds.length < 6) break;
+
+              const sprintId = generateId();
+              state.sprints.push({
+                id: sprintId,
+                title: `Sprint ${sprintOrder + 1}`,
+                goalPitch: '',
+                colorTheme: SPRINT_COLORS[sprintOrder % SPRINT_COLORS.length],
+                weekIds,
+                year: state.year,
+                order: sprintOrder,
+              });
+
+              weekIds.forEach((weekId) => {
+                const week = state.weeks.find((w) => w.id === weekId);
+                if (week) week.sprintId = sprintId;
+              });
+
+              sprintOrder += 1;
+            }
+
+            if (weekIndex < state.weeks.length) {
+              const week = state.weeks[weekIndex];
+              week.isVacation = true;
+              state.vacationWeekIds.push(week.id);
+              weekIndex += 1;
+            }
+          }
+
+          while (state.vacationWeekIds.length < remainingVacationWeeks && weekIndex < state.weeks.length) {
+            const week = state.weeks[weekIndex];
+            week.isVacation = true;
+            state.vacationWeekIds.push(week.id);
+            weekIndex += 1;
+          }
         }
       })
     );
@@ -372,9 +427,11 @@ export const yearStore = createRoot(() => {
     vacationCount,
     canAddVacation,
     get undoLabel() { const s = undoSnapshot(); return s ? s.label : null; },
+    get cycleMode() { return cycleMode(); },
 
     // Actions
     setYear,
+    setCycleMode,
     undo,
     getWeek,
     getWeeksBySprint,
