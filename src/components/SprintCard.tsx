@@ -164,7 +164,7 @@ export const SprintCard: Component<SprintCardProps> = (props) => {
       </div>
 
       {/* Weeks grid */}
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-px bg-surface-800">
+      <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-px bg-surface-800">
         <For each={weeks()}>
           {(week, index) => (
             <div class="bg-surface-900">

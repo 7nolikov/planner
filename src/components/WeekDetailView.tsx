@@ -1,5 +1,5 @@
 import { Component, For, Show, createMemo, createSignal } from 'solid-js';
-import { ArrowLeft, Plus, Target, Palmtree, Check } from 'lucide-solid';
+import { ArrowLeft, ArrowRight, ChevronUp, Plus, Target, Palmtree, Check } from 'lucide-solid';
 import { yearStore } from '../stores/yearStore';
 import { sprintStore } from '../stores/sprintStore';
 import { uiStore } from '../stores/uiStore';
@@ -19,6 +19,18 @@ export const WeekDetailView: Component = () => {
   const sprint = createMemo(() => {
     const w = week();
     return w?.sprintId ? sprintStore.getSprint(w.sprintId) : undefined;
+  });
+
+  const weekNavigation = createMemo(() => {
+    const w = week();
+    const weeks = yearStore.weeks;
+    if (!w || weeks.length === 0) return { previousId: null as string | null, nextId: null as string | null };
+    const index = weeks.findIndex((item) => item.id === w.id);
+    if (index === -1) return { previousId: null as string | null, nextId: null as string | null };
+    return {
+      previousId: index > 0 ? weeks[index - 1].id : null,
+      nextId: index < weeks.length - 1 ? weeks[index + 1].id : null,
+    };
   });
 
   const isCurrentWeek = createMemo(() => {
@@ -72,7 +84,7 @@ export const WeekDetailView: Component = () => {
     uiStore.endDrag();
   };
 
-  const handleGoBack = () => {
+  const handleNavigateUp = () => {
     const s = sprint();
     if (s) {
       uiStore.navigateTo('sprint', s.id);
@@ -94,14 +106,16 @@ export const WeekDetailView: Component = () => {
         onDrop={handleDrop}
       >
         {/* Header */}
-        <div class="flex items-start gap-4">
-          <button
-            onClick={handleGoBack}
-            class="mt-1 p-2 text-surface-400 hover:text-white hover:bg-surface-800 rounded-lg transition-colors"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div class="flex-1 min-w-0">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div class="flex items-start gap-4">
+            <button
+              onClick={handleNavigateUp}
+              class="mt-1 p-2 text-surface-400 hover:text-white hover:bg-surface-800 rounded-lg transition-colors"
+              title="Up"
+            >
+              <ChevronUp size={20} />
+            </button>
+            <div class="flex-1 min-w-0">
             <div class="flex items-center gap-3">
               <h2 class={`text-2xl font-bold ${isCurrentWeek() ? 'text-sprint-azure' : 'text-white'}`}>
                 Week {week()!.weekNumber}
@@ -109,6 +123,34 @@ export const WeekDetailView: Component = () => {
               </h2>
             </div>
             <p class="mt-1 text-sm text-surface-400">{formatFullDateRange()}</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button
+              onClick={() => {
+                const id = weekNavigation().previousId;
+                if (id) uiStore.navigateTo('week', id);
+              }}
+              disabled={!weekNavigation().previousId}
+              class="btn btn-ghost disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Previous week"
+            >
+              <ArrowLeft size={16} />
+              Previous
+            </button>
+            <button
+              onClick={() => {
+                const id = weekNavigation().nextId;
+                if (id) uiStore.navigateTo('week', id);
+              }}
+              disabled={!weekNavigation().nextId}
+              class="btn btn-ghost disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Next week"
+            >
+              Next
+              <ArrowRight size={16} />
+            </button>
           </div>
         </div>
 
