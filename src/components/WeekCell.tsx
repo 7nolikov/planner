@@ -9,6 +9,7 @@ import { DragDropManager } from '../services/DragDropManager';
 import { YearGenerator } from '../services/YearGenerator';
 import { TaskItem } from './TaskItem';
 import { VacationBadge } from './VacationBadge';
+import { CooldownBadge } from './CooldownBadge';
 
 interface WeekCellProps {
   week: Week;
@@ -98,7 +99,7 @@ export const WeekCell: Component<WeekCellProps> = (props) => {
 
   return (
     <div
-      class={`week-cell flex flex-col ${props.week.isVacation ? 'vacation' : ''} ${
+      class={`week-cell flex flex-col ${props.week.isVacation ? 'vacation' : ''} ${props.week.isCooldown ? 'cooldown' : ''} ${
         isDropTarget() ? 'drop-target' : ''
       } ${isCurrentWeek() ? 'current-week' : ''} ${colorClasses()?.bg ?? ''} ${colorClasses()?.border ? `border-l-2 ${colorClasses()?.border}` : ''}`}
       onDragOver={handleDragOver}
@@ -117,6 +118,9 @@ export const WeekCell: Component<WeekCellProps> = (props) => {
         
         <Show when={props.week.isVacation}>
           <VacationBadge />
+        </Show>
+        <Show when={props.week.isCooldown}>
+          <CooldownBadge />
         </Show>
       </div>
 
@@ -145,7 +149,7 @@ export const WeekCell: Component<WeekCellProps> = (props) => {
 
       {/* Actions */}
       <div class="mt-2 flex items-center gap-1 pt-2 border-t border-surface-800">
-        <Show when={!props.week.isVacation && !props.week.sprintId}>
+        <Show when={!props.week.isVacation && !props.week.isCooldown && !props.week.sprintId}>
           <button
             onClick={handleCreateSprint}
             class="flex items-center gap-1 rounded px-2 py-1 text-xs text-surface-500 hover:bg-surface-800 hover:text-surface-300 transition-colors"
@@ -156,7 +160,7 @@ export const WeekCell: Component<WeekCellProps> = (props) => {
           </button>
         </Show>
 
-        <Show when={!props.week.sprintId && !props.week.isVacation}>
+        <Show when={!props.week.sprintId && !props.week.isVacation && !props.week.isCooldown}>
           <button
             onClick={handleVacationToggle}
             disabled={!yearStore.canAddVacation()}

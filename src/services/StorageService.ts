@@ -67,7 +67,21 @@ export const StorageService = {
       const key = this.getKey(year);
       const serialized = localStorage.getItem(key);
       if (!serialized) return null;
-      return JSON.parse(serialized) as YearData;
+      const data = JSON.parse(serialized) as YearData;
+
+      // Migrate: ensure cooldownWeekIds exists
+      if (!data.cooldownWeekIds) {
+        data.cooldownWeekIds = [];
+      }
+
+      // Migrate: ensure each week has isCooldown field
+      for (const week of data.weeks) {
+        if (week.isCooldown === undefined) {
+          week.isCooldown = false;
+        }
+      }
+
+      return data;
     } catch (error) {
       console.error('Failed to load year data:', error);
       return null;

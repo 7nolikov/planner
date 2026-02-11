@@ -75,6 +75,19 @@ select,
     @apply bg-vacation/10;
   }
 
+  .cooldown-card {
+    @apply rounded-xl border border-cooldown/30 bg-surface-900/50 backdrop-blur-sm;
+    @apply transition-all duration-200 ease-out;
+  }
+
+  .cooldown-card:hover {
+    @apply border-cooldown/60 shadow-lg shadow-black/20;
+  }
+
+  .cooldown-card__header {
+    @apply bg-cooldown/10;
+  }
+
   .week-cell {
     @apply rounded-lg border border-surface-800 bg-surface-900;
     @apply p-3 min-h-[100px] transition-all duration-150;
@@ -83,6 +96,10 @@ select,
 
   .week-cell.vacation {
     @apply border-vacation/30 bg-vacation/5;
+  }
+
+  .week-cell.cooldown {
+    @apply border-cooldown/30 bg-cooldown/5;
   }
 
   .week-cell.current-week {
@@ -186,7 +203,8 @@ select,
 
   /* Full-width sprint cards on mobile */
   .sprint-card,
-  .vacation-card {
+  .vacation-card,
+  .cooldown-card {
     min-width: calc(100vw - 2rem);
     flex-shrink: 0;
   }

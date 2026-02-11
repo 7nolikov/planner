@@ -34,15 +34,19 @@ export const sprintStore = createRoot(() => {
     const weekIds: string[] = [];
     let currentIndex = startWeekIndex;
     let blockedByVacation = false;
+    let blockedByCooldown = false;
     let blockedBySprint = false;
 
     while (weekIds.length < WEEKS_PER_SPRINT && currentIndex < yearStore.weeks.length) {
       const week = yearStore.weeks[currentIndex];
 
-      if (!week.isVacation && week.sprintId === null) {
+      if (!week.isVacation && !week.isCooldown && week.sprintId === null) {
         weekIds.push(week.id);
       } else if (week.isVacation) {
         blockedByVacation = true;
+        break;
+      } else if (week.isCooldown) {
+        blockedByCooldown = true;
         break;
       } else if (week.sprintId !== null) {
         blockedBySprint = true;
@@ -55,6 +59,9 @@ export const sprintStore = createRoot(() => {
       const n = weekIds.length;
       if (blockedByVacation) {
         return { error: `Only ${n} free week${n !== 1 ? 's' : ''} before a vacation week. Need ${WEEKS_PER_SPRINT}.` };
+      }
+      if (blockedByCooldown) {
+        return { error: `Only ${n} free week${n !== 1 ? 's' : ''} before a cooldown period. Need ${WEEKS_PER_SPRINT}.` };
       }
       if (blockedBySprint) {
         return { error: `Only ${n} free week${n !== 1 ? 's' : ''} before the next sprint. Need ${WEEKS_PER_SPRINT}.` };
