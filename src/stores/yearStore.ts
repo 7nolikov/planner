@@ -312,7 +312,15 @@ export const yearStore = createRoot(() => {
         let sprintOrder = 0;
 
         if (mode === '6-cycles') {
-          // 6-cycles: sprint(6w) → cooldown(2w) → sprint(6w) → cooldown(2w) → ...
+          // 6-cycles: sprint(6w) → cooldown(2w) → [vacation(1w)] → ...
+          // 4 vacations placed after the first 4 sprint-cooldown pairs
+          // for equal distribution across the year (~every 9 weeks)
+          const totalVacations = 4;
+          const vacationPositions = new Set<number>();
+          for (let i = 0; i < totalVacations; i++) {
+            vacationPositions.add(i);
+          }
+
           while (sprintOrder < targetSprints && weekIndex < state.weeks.length) {
             // Create 6-week sprint
             const weekIds: string[] = [];
@@ -339,9 +347,10 @@ export const yearStore = createRoot(() => {
               if (week) week.sprintId = sprintId;
             });
 
+            const currentSprintOrder = sprintOrder;
             sprintOrder += 1;
 
-            // Add 2-week cooldown periods between cycles (not after the last cycle)
+            // Add 2-week cooldown between sprints (not after the last sprint)
             if (sprintOrder < targetSprints) {
               for (let i = 0; i < cooldownWeeks && weekIndex < state.weeks.length; i++) {
                 const week = state.weeks[weekIndex];
@@ -350,15 +359,17 @@ export const yearStore = createRoot(() => {
                 weekIndex += 1;
               }
             }
+
+            // Add 1-week vacation after this sprint-cooldown if scheduled
+            if (vacationPositions.has(currentSprintOrder) && weekIndex < state.weeks.length) {
+              const week = state.weeks[weekIndex];
+              week.isVacation = true;
+              state.vacationWeekIds.push(week.id);
+              weekIndex += 1;
+            }
           }
 
-          // Remaining weeks become vacation/flex
-          while (weekIndex < state.weeks.length) {
-            const week = state.weeks[weekIndex];
-            week.isVacation = true;
-            state.vacationWeekIds.push(week.id);
-            weekIndex += 1;
-          }
+          // Remaining weeks stay unassigned
         } else {
           // 8-cycles: 2 sprints → 1 vacation → 2 sprints → 1 vacation → ...
           const totalSprintWeeks = targetSprints * 6;
