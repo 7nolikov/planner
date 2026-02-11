@@ -26,6 +26,7 @@ export default {
           cyan: '#0891B2',
         },
         vacation: '#F59E0B',
+        cooldown: '#6366F1',
         surface: {
           50: '#FAFAFA',
           100: '#F4F4F5',

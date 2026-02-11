@@ -55,6 +55,7 @@ function generateWeek(year: number, weekNumber: number, startDate: Date): Week {
     startDate: formatDate(startDate),
     endDate: formatDate(endDate),
     isVacation: false,
+    isCooldown: false,
     sprintId: null,
     tasks: [],
     order: weekNumber,
@@ -96,6 +97,7 @@ export const YearGenerator = {
       weeks,
       sprints: [],
       vacationWeekIds: [],
+      cooldownWeekIds: [],
     };
   },
 

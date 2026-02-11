@@ -14,6 +14,7 @@ export interface Week {
   startDate: string;    // ISO date string
   endDate: string;      // ISO date string
   isVacation: boolean;
+  isCooldown: boolean;  // Shape Up cooldown period between cycles
   sprintId: string | null;
   tasks: Task[];
   order: number;        // For drag-and-drop reordering
@@ -34,6 +35,7 @@ export interface YearData {
   weeks: Week[];
   sprints: Sprint[];
   vacationWeekIds: string[];  // Max 5 vacation weeks
+  cooldownWeekIds: string[];  // 2-week cooldown periods between cycles
 }
 
 export type SprintColor = 

@@ -1,17 +1,19 @@
 import { Component, For, Show, createMemo } from 'solid-js';
-import { Calendar, Palmtree } from 'lucide-solid';
+import { Calendar, Palmtree, Coffee } from 'lucide-solid';
 import { yearStore } from '../stores/yearStore';
 import { sprintStore } from '../stores/sprintStore';
 import { SprintCard } from './SprintCard';
 import { VacationCard } from './VacationCard';
+import { CooldownCard } from './CooldownCard';
 import { WeekCell } from './WeekCell';
 import { MAX_VACATION_WEEKS } from '../types';
 import type { Sprint, Week } from '../types';
 
-type Section = 
+type Section =
   | { type: 'sprint'; sprint: Sprint }
   | { type: 'unassigned'; weeks: Week[] }
-  | { type: 'vacation'; weeks: Week[] };
+  | { type: 'vacation'; weeks: Week[] }
+  | { type: 'cooldown'; weeks: Week[] };
 
 export const YearView: Component = () => {
   const groupConsecutiveWeeks = (weeks: Week[]) => {
@@ -40,18 +42,23 @@ export const YearView: Component = () => {
     return groups;
   };
 
-  // Get unassigned weeks (not in any sprint or vacation)
+  // Get unassigned weeks (not in any sprint, vacation, or cooldown)
   const unassignedWeeks = createMemo(() => {
-    return yearStore.weeks.filter((week) => !week.sprintId && !week.isVacation);
+    return yearStore.weeks.filter((week) => !week.sprintId && !week.isVacation && !week.isCooldown);
   });
 
   const vacationWeeks = createMemo(() => {
     return yearStore.weeks.filter((week) => week.isVacation);
   });
 
-  // Group consecutive unassigned weeks
+  const cooldownWeeks = createMemo(() => {
+    return yearStore.weeks.filter((week) => week.isCooldown);
+  });
+
+  // Group consecutive weeks
   const unassignedGroups = createMemo((): Week[][] => groupConsecutiveWeeks(unassignedWeeks()));
   const vacationGroups = createMemo((): Week[][] => groupConsecutiveWeeks(vacationWeeks()));
+  const cooldownGroups = createMemo((): Week[][] => groupConsecutiveWeeks(cooldownWeeks()));
 
   // Interleave sprints and unassigned groups by week number
   const orderedSections = createMemo((): Section[] => {
@@ -74,6 +81,13 @@ export const YearView: Component = () => {
     vacationGroups().forEach((weeks) => {
       if (weeks.length > 0) {
         sections.push({ type: 'vacation', weeks });
+      }
+    });
+
+    // Add cooldown groups
+    cooldownGroups().forEach((weeks) => {
+      if (weeks.length > 0) {
+        sections.push({ type: 'cooldown', weeks });
       }
     });
 
@@ -109,6 +123,12 @@ export const YearView: Component = () => {
           <Palmtree size={16} class="text-vacation" />
           <span>{yearStore.vacationCount()}/{MAX_VACATION_WEEKS} vacation weeks</span>
         </div>
+        <Show when={yearStore.cooldownCount() > 0}>
+          <div class="flex items-center gap-2">
+            <Coffee size={16} class="text-cooldown" />
+            <span>{yearStore.cooldownCount()} cooldown weeks</span>
+          </div>
+        </Show>
         <div class="flex items-center gap-2">
           <span class="h-1.5 w-1.5 rounded-full bg-surface-500" />
           <span>{unassignedWeeks().length} available weeks</span>
@@ -124,6 +144,8 @@ export const YearView: Component = () => {
                 <SprintCard sprint={section.sprint} />
               ) : section.type === 'vacation' ? (
                 <VacationCard weeks={section.weeks} />
+              ) : section.type === 'cooldown' ? (
+                <CooldownCard weeks={section.weeks} />
               ) : (
                 <WeekGroupSection
                   weeks={section.weeks}

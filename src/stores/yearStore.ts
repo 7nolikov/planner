@@ -18,6 +18,7 @@ export const yearStore = createRoot(() => {
     weeks: [],
     sprints: [],
     vacationWeekIds: [],
+    cooldownWeekIds: [],
   });
 
   // Cycle mode preference
@@ -70,6 +71,11 @@ export const yearStore = createRoot(() => {
   const vacationCount = createMemo(() => yearData.vacationWeekIds.length);
 
   /**
+   * Get the count of cooldown weeks
+   */
+  const cooldownCount = createMemo(() => yearData.cooldownWeekIds.length);
+
+  /**
    * Check if more vacations can be added
    */
   const canAddVacation = createMemo(() => vacationCount() < MAX_VACATION_WEEKS);
@@ -113,8 +119,9 @@ export const yearStore = createRoot(() => {
     // Check if can add vacation
     if (!canAddVacation()) return false;
 
-    // Can't make week vacation if it's part of a sprint
+    // Can't make week vacation if it's part of a sprint or a cooldown period
     if (week.sprintId !== null) return false;
+    if (week.isCooldown) return false;
 
     setYearData(
       produce((state) => {
@@ -292,9 +299,11 @@ export const yearStore = createRoot(() => {
       produce((state) => {
         state.sprints = [];
         state.vacationWeekIds = [];
+        state.cooldownWeekIds = [];
 
         state.weeks.forEach((week) => {
           week.isVacation = false;
+          week.isCooldown = false;
           week.sprintId = null;
           week.tasks = [];
         });
@@ -332,9 +341,14 @@ export const yearStore = createRoot(() => {
 
             sprintOrder += 1;
 
-            // Add cooldown weeks (unassigned, not vacation)
-            for (let i = 0; i < cooldownWeeks && weekIndex < state.weeks.length; i++) {
-              weekIndex += 1;
+            // Add 2-week cooldown periods between cycles (not after the last cycle)
+            if (sprintOrder < targetSprints) {
+              for (let i = 0; i < cooldownWeeks && weekIndex < state.weeks.length; i++) {
+                const week = state.weeks[weekIndex];
+                week.isCooldown = true;
+                state.cooldownWeekIds.push(week.id);
+                weekIndex += 1;
+              }
             }
           }
 
@@ -424,7 +438,9 @@ export const yearStore = createRoot(() => {
     get year() { return currentYear(); },
     get weeks() { return yearData.weeks; },
     get vacationWeekIds() { return yearData.vacationWeekIds; },
+    get cooldownWeekIds() { return yearData.cooldownWeekIds; },
     vacationCount,
+    cooldownCount,
     canAddVacation,
     get undoLabel() { const s = undoSnapshot(); return s ? s.label : null; },
     get cycleMode() { return cycleMode(); },
