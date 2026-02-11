@@ -312,7 +312,11 @@ export const yearStore = createRoot(() => {
         let sprintOrder = 0;
 
         if (mode === '6-cycles') {
-          // 6-cycles: sprint(6w) → cooldown(2w) → sprint(6w) → cooldown(2w) → ...
+          // 6-cycles: sprint(6w) → cooldown(2w) → [vacation(1w)] → ...
+          // 6 sprints + 6 cooldowns + 4 vacations = 52 weeks (full year)
+          // Vacations placed after the first 4 cooldowns for equal ~9-week spacing
+          const vacationPositions = new Set([0, 1, 2, 3]);
+
           while (sprintOrder < targetSprints && weekIndex < state.weeks.length) {
             // Create 6-week sprint
             const weekIds: string[] = [];
@@ -339,20 +343,27 @@ export const yearStore = createRoot(() => {
               if (week) week.sprintId = sprintId;
             });
 
+            const currentSprintOrder = sprintOrder;
             sprintOrder += 1;
 
-            // Add 2-week cooldown periods between cycles (not after the last cycle)
-            if (sprintOrder < targetSprints) {
-              for (let i = 0; i < cooldownWeeks && weekIndex < state.weeks.length; i++) {
-                const week = state.weeks[weekIndex];
-                week.isCooldown = true;
-                state.cooldownWeekIds.push(week.id);
-                weekIndex += 1;
-              }
+            // Add 2-week cooldown after every sprint (including the last)
+            for (let i = 0; i < cooldownWeeks && weekIndex < state.weeks.length; i++) {
+              const week = state.weeks[weekIndex];
+              week.isCooldown = true;
+              state.cooldownWeekIds.push(week.id);
+              weekIndex += 1;
+            }
+
+            // Add 1-week vacation after this sprint-cooldown if scheduled
+            if (vacationPositions.has(currentSprintOrder) && weekIndex < state.weeks.length) {
+              const week = state.weeks[weekIndex];
+              week.isVacation = true;
+              state.vacationWeekIds.push(week.id);
+              weekIndex += 1;
             }
           }
 
-          // Remaining weeks become vacation/flex
+          // Any remaining weeks (53-week years) become vacation
           while (weekIndex < state.weeks.length) {
             const week = state.weeks[weekIndex];
             week.isVacation = true;

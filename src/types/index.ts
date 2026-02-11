@@ -78,7 +78,7 @@ export type CycleMode = '6-cycles' | '8-cycles';
 export const CYCLE_MODE_INFO: Record<CycleMode, { label: string; description: string; sprints: number; cooldownWeeks: number }> = {
   '6-cycles': {
     label: '6 Cycles',
-    description: '6 sprints + 2-week cooldowns',
+    description: '6 sprints + 6 cooldowns + 4 vacations',
     sprints: 6,
     cooldownWeeks: 2,
   },
