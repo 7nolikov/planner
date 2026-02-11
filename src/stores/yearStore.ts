@@ -313,13 +313,9 @@ export const yearStore = createRoot(() => {
 
         if (mode === '6-cycles') {
           // 6-cycles: sprint(6w) → cooldown(2w) → [vacation(1w)] → ...
-          // 4 vacations placed after the first 4 sprint-cooldown pairs
-          // for equal distribution across the year (~every 9 weeks)
-          const totalVacations = 4;
-          const vacationPositions = new Set<number>();
-          for (let i = 0; i < totalVacations; i++) {
-            vacationPositions.add(i);
-          }
+          // 6 sprints + 6 cooldowns + 4 vacations = 52 weeks (full year)
+          // Vacations placed after the first 4 cooldowns for equal ~9-week spacing
+          const vacationPositions = new Set([0, 1, 2, 3]);
 
           while (sprintOrder < targetSprints && weekIndex < state.weeks.length) {
             // Create 6-week sprint
@@ -350,14 +346,12 @@ export const yearStore = createRoot(() => {
             const currentSprintOrder = sprintOrder;
             sprintOrder += 1;
 
-            // Add 2-week cooldown between sprints (not after the last sprint)
-            if (sprintOrder < targetSprints) {
-              for (let i = 0; i < cooldownWeeks && weekIndex < state.weeks.length; i++) {
-                const week = state.weeks[weekIndex];
-                week.isCooldown = true;
-                state.cooldownWeekIds.push(week.id);
-                weekIndex += 1;
-              }
+            // Add 2-week cooldown after every sprint (including the last)
+            for (let i = 0; i < cooldownWeeks && weekIndex < state.weeks.length; i++) {
+              const week = state.weeks[weekIndex];
+              week.isCooldown = true;
+              state.cooldownWeekIds.push(week.id);
+              weekIndex += 1;
             }
 
             // Add 1-week vacation after this sprint-cooldown if scheduled
@@ -369,7 +363,13 @@ export const yearStore = createRoot(() => {
             }
           }
 
-          // Remaining weeks stay unassigned
+          // Any remaining weeks (53-week years) become vacation
+          while (weekIndex < state.weeks.length) {
+            const week = state.weeks[weekIndex];
+            week.isVacation = true;
+            state.vacationWeekIds.push(week.id);
+            weekIndex += 1;
+          }
         } else {
           // 8-cycles: 2 sprints → 1 vacation → 2 sprints → 1 vacation → ...
           const totalSprintWeeks = targetSprints * 6;
